@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId    String  @id @default(uuid())
+  name      String?
+  email     String  @unique
+  token     String
+  role      roleType
+  createdAt DateTime @default(now())
+  
+  Editor    Editor?
+  Creator   Creator?
+}
+
+model Editor {
+  editorId       String   @id @default(uuid())
+  user           User     @relation(fields: [userId], references: [userId])
+  userId         String   @unique
+  uploadedVideos Video[]
+}
+
+model Creator {
+  creatorId      String   @id @default(uuid())
+  user           User     @relation(fields: [userId], references: [userId])
+  userId         String   @unique
+  youtubeChannel YouTubeChannel @relation(fields: [channelId], references: [channelId])
+  channelId      String   @unique
+  reviewedVideos Video[]  @relation("CreatorVideos")
+}
+
+model Video {
+  videoId       String   @id @default(uuid())
+  title         String
+  hashtags      String[]
+  status        String
+  s3Path        String
+  uploadDate    DateTime @default(now())
+
+  editor        Editor   @relation(fields: [editorId], references: [editorId])
+  editorId      String
+  approvalProcess ApprovalProcess @relation(fields: [processId], references: [processId])
+  processId     String @unique
+
+  creator       Creator? @relation(fields: [creatorId], references: [creatorId], name: "CreatorVideos")
+  creatorId     String?
+}
+
+model YouTubeChannel {
+  channelId     String  @id @default(uuid())
+  oauthToken    String
+  refreshToken  String
+  creator       Creator?
+}
+
+model ApprovalProcess {
+  processId     String   @id @default(uuid())
+  decision      decissionType
+  decisionDate  DateTime @default(now())
+  comments      String?
+  
+  video         Video?
+  notifications Notification[]
+}
+
+model Notification {
+  notificationId String  @id @default(uuid())
+  type           String
+  message        String
+  approvalProcess ApprovalProcess @relation(fields: [processId], references: [processId])
+  processId      String
+}
+
+enum roleType {
+  EDITOR
+  CREATOR
+}
+
+enum decissionType {
+  APPROVED
+  PENDING
+  REJECTED
+}
