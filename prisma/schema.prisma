@@ -8,82 +8,105 @@ datasource db {
 }
 
 model User {
-  userId    String  @id @default(uuid())
-  name      String?
-  email     String  @unique
-  token     String
-  role      roleType
-  createdAt DateTime @default(now())
+  id       Int       @id @default(autoincrement())
+  name     String?
+  image    String?
+  email    String    @unique
+  role     Role?
+  emailVerified DateTime?
+
+  // NextAuth relations
+  accounts Account[]
+  sessions Session[]
+
+  // Your additional relations:
+  editor   Editor?   // Optional relation: stores the Editor profile if the user is an editor
+  creator  Creator?  // Optional relation: stores the Creator profile if the user is a creator
+}
+
+model Account {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?  
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
   
-  Editor    Editor?
-  Creator   Creator?
+  user   User @relation(fields: [userId], references: [id])
+  
+  @@unique([provider, providerAccountId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Session {
+  id           String   @id @default(uuid())  // Unique session identifier
+  sessionToken String   @unique             // Session token stored in the user's browser
+  userId       Int                               // Foreign key referencing the User model
+  user         User     @relation(fields: [userId], references: [id])
+  expires      DateTime                          // Expiration date for the session
 }
 
 model Editor {
-  editorId       String   @id @default(uuid())
-  user           User     @relation(fields: [userId], references: [userId])
-  userId         String   @unique
-  uploadedVideos Video[]
+  id        Int       @id                                // Unique editor identifier (mirrors the associated User's id)
+  user      User      @relation(fields: [id], references: [id])
+  creatorId Int?                                      // Optionally stores the associated Creator's id (foreign key)
+  creator   Creator?  @relation(fields: [creatorId], references: [id])
+  
+  videos    Video[]                                    // Stores a list of videos managed or created by the editor
+  projects  Project[]                                  // Stores a list of projects associated with the editor
 }
 
 model Creator {
-  creatorId      String   @id @default(uuid())
-  user           User     @relation(fields: [userId], references: [userId])
-  userId         String   @unique
-  youtubeChannel YouTubeChannel @relation(fields: [channelId], references: [channelId])
-  channelId      String   @unique
-  reviewedVideos Video[]  @relation("CreatorVideos")
+  id       Int       @id                                // Unique creator identifier (mirrors the associated User's id)
+  user     User      @relation(fields: [id], references: [id])
+  
+  editors  Editor[]                                   // Stores a list of editors linked to the creator
+  projects Project[]                                  // Stores a list of projects associated with the creator
 }
 
 model Video {
-  videoId       String   @id @default(uuid())
-  title         String
-  hashtags      String[]
-  status        String
-  s3Path        String
-  uploadDate    DateTime @default(now())
+  id          Int       @id @default(autoincrement())
+  thumbnail   String?
+  title       String?
+  description String?
+  videoLink   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  editor        Editor   @relation(fields: [editorId], references: [editorId])
-  editorId      String
-  approvalProcess ApprovalProcess @relation(fields: [processId], references: [processId])
-  processId     String @unique
-
-  creator       Creator? @relation(fields: [creatorId], references: [creatorId], name: "CreatorVideos")
-  creatorId     String?
+  editorId    Int                                        // Foreign key referencing the editor's id
+  editor      Editor  @relation(fields: [editorId], references: [id])
 }
 
-model YouTubeChannel {
-  channelId     String  @id @default(uuid())
-  oauthToken    String
-  refreshToken  String
-  creator       Creator?
-}
-
-model ApprovalProcess {
-  processId     String   @id @default(uuid())
-  decision      decissionType
-  decisionDate  DateTime @default(now())
-  comments      String?
+model Project {
+  id         Int    @id @default(autoincrement())
+  status     Status @default(PENDING)
   
-  video         Video?
-  notifications Notification[]
+  editorId   Int
+  creatorId  Int
+  editor     Editor  @relation(fields: [editorId], references: [id])
+  creator    Creator @relation(fields: [creatorId], references: [id])
 }
 
-model Notification {
-  notificationId String  @id @default(uuid())
-  type           String
-  message        String
-  approvalProcess ApprovalProcess @relation(fields: [processId], references: [processId])
-  processId      String
-}
-
-enum roleType {
-  EDITOR
+enum Role {
   CREATOR
+  EDITOR
 }
 
-enum decissionType {
-  APPROVED
+enum Status {
   PENDING
+  ACCEPTED
   REJECTED
 }
