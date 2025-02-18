@@ -1,13 +1,15 @@
-'use client'
+"use client";
 
 import axios from "axios";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function EditorPage() {
   const [referralCode, setReferralCode] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const redeemCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,13 +22,23 @@ export default function EditorPage() {
     }
 
     setLoading(true);
-
     try {
-      const res = await axios.post("/api/referral/redeem", { code: referralCode });
-      setMessage(res.data.message);
+      const res = await axios.post("/api/referral/redeem", {
+        code: referralCode,
+      });
+      if (res.status === 200) {
+        setMessage(res.data.message);
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       console.error("Error redeeming code:", err);
-      setError(err.response?.data?.error || "An unexpected error occurred.");
+      if (err.response?.status === 403) {
+        setError("You are not authorized to redeem this code.");
+      } else if (err.response?.status === 400) {
+        setError(err.response?.data?.error || "Invalid referral code.");
+      } else {
+        setError("An unexpected error occurred. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }
@@ -41,12 +53,14 @@ export default function EditorPage() {
           value={referralCode}
           onChange={(e) => setReferralCode(e.target.value)}
           placeholder="Enter referral code"
-          className="border p-3 rounded w-full bg-slate-800 font-medium text-xl"
+          className="border p-3 rounded w-full bg-slate-800 font-medium text-xl text-white"
         />
         <button
           type="submit"
-          disabled={loading}
-          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+          disabled={loading || !referralCode.trim()}
+          className={`bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 ${
+            loading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         >
           {loading ? "Redeeming..." : "Redeem Code"}
         </button>

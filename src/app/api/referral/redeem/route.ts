@@ -1,4 +1,3 @@
-// /api/referral/redeem/route.ts
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/utils/get-user";
 import { checkReferral } from "@/lib/utils/check-referral";
@@ -20,7 +19,6 @@ export async function POST(request: Request) {
     const editorRecord = await prisma.editor.findUnique({
       where: { id: user.id },
     });
-
     if (editorRecord?.creatorId) {
       return NextResponse.json(
         { error: "You are already connected to a creator." },
@@ -28,13 +26,24 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if the user has already redeemed a referral code.
+    const existingRedeemedReferral = await prisma.referral.findFirst({
+      where: { editorId: user.id },
+    });
+    if (existingRedeemedReferral) {
+      return NextResponse.json(
+        { error: "You have already redeemed a referral code." },
+        { status: 400 }
+      );
+    }
+
     // Parse the referral code from the request body.
     const { code } = await request.json();
 
-    // Check the referral code.
+    // Validate the referral code. (checkReferral() throws errors on invalid codes.)
     await checkReferral(code);
 
-    // Redeem the referral code by updating the referral record.
+    // Redeem the referral code by updating it with the editor's ID and setting usedAt.
     const updatedReferral = await prisma.referral.update({
       where: { code },
       data: {
@@ -43,7 +52,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Connect the editor with the creator via upsert (or update).
+    // Connect the editor with the creator via upsert.
     await prisma.editor.upsert({
       where: { id: user.id },
       update: { creatorId: updatedReferral.creatorId },
