@@ -16,13 +16,25 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if the editor is already connected to a creator.
+    const editorRecord = await prisma.editor.findUnique({
+      where: { id: user.id },
+    });
+
+    if (editorRecord?.creatorId) {
+      return NextResponse.json(
+        { error: "You are already connected to a creator." },
+        { status: 400 }
+      );
+    }
+
     // Parse the referral code from the request body.
     const { code } = await request.json();
 
-    // Check the referral code using the utility function.
+    // Check the referral code.
     await checkReferral(code);
 
-    // Mark the referral as redeemed by updating it with the editor's ID and setting usedAt.
+    // Redeem the referral code by updating the referral record.
     const updatedReferral = await prisma.referral.update({
       where: { code },
       data: {
@@ -31,24 +43,12 @@ export async function POST(request: Request) {
       },
     });
 
-    // Ensure that the Creator record exists for the referral's creator.
-    await prisma.creator.upsert({
-      where: { id: updatedReferral.creatorId },
-      update: {},
-      create: {
-        // Connect the creator record to the corresponding User.
-        user: { connect: { id: updatedReferral.creatorId } },
-      },
-    });
-
-    // Upsert the Editor record for the current user to connect it to the creator.
+    // Connect the editor with the creator via upsert (or update).
     await prisma.editor.upsert({
       where: { id: user.id },
       update: { creatorId: updatedReferral.creatorId },
       create: {
-        // Connect the Editor to the current User.
         user: { connect: { id: user.id } },
-        // Also connect the Editor to the Creator.
         creator: { connect: { id: updatedReferral.creatorId } },
       },
     });

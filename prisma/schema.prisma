@@ -84,14 +84,13 @@ model Referral {
   id         Int      @id @default(autoincrement())
   code       String   @unique
   creatorId  Int
-  editorId   Int?
+  editorId   Int?     @unique   // Unique constraint: one editor per referral record
   usedAt     DateTime?
   expiresAt  DateTime?
 
   creator    User     @relation("CreatorReferrals", fields: [creatorId], references: [id])
   editor     User?    @relation("EditorReferrals", fields: [editorId], references: [id])
 }
-
 
 model Video {
   id          Int       @id @default(autoincrement())
