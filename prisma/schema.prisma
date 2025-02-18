@@ -22,6 +22,9 @@ model User {
   // Your additional relations:
   editor   Editor?   // Optional relation: stores the Editor profile if the user is an editor
   creator  Creator?  // Optional relation: stores the Creator profile if the user is a creator
+
+  createdReferrals Referral[] @relation("CreatorReferrals")
+  receivedReferrals Referral[] @relation("EditorReferrals")
 }
 
 model Account {
@@ -76,6 +79,19 @@ model Creator {
   editors  Editor[]                                   // Stores a list of editors linked to the creator
   projects Project[]                                  // Stores a list of projects associated with the creator
 }
+
+model Referral {
+  id         Int      @id @default(autoincrement())
+  code       String   @unique
+  creatorId  Int
+  editorId   Int?
+  usedAt     DateTime?
+  expiresAt  DateTime?
+
+  creator    User     @relation("CreatorReferrals", fields: [creatorId], references: [id])
+  editor     User?    @relation("EditorReferrals", fields: [editorId], references: [id])
+}
+
 
 model Video {
   id          Int       @id @default(autoincrement())
