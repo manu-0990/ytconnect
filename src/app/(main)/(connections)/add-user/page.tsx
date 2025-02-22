@@ -3,10 +3,8 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 export default function ReferralPage() {
-  const navigate = useRouter();
   const { data: session } = useSession();
   const [role, setRole] = useState<string | null | undefined>(null);
   const [referralCode, setReferralCode] = useState("");
@@ -48,7 +46,6 @@ export default function ReferralPage() {
         code: redeemCode,
       });
       setMessage(res.data.message || "Referral code redeemed successfully!");
-      navigate.push('/dashboard');
     } catch (err: any) {
       console.error(err);
       setMessage(err.response?.data?.error || "Error redeeming referral code.");
