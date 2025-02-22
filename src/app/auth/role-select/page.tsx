@@ -17,7 +17,7 @@ export default function RoleSelectPage() {
 
   const selectRole = async (role: "CREATOR" | "EDITOR") => {
     try {
-      await axios.post("/api/user/update-role", { role });
+      await axios.post("/api/user/update-role", { role: role });
       router.push("/dashboard");
     } catch (error) {
       console.error("Error selecting role:", error);

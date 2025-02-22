@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import axios from "axios";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function ReferralPage() {
+  const navigate = useRouter();
   const { data: session } = useSession();
   const [role, setRole] = useState<string | null | undefined>(null);
   const [referralCode, setReferralCode] = useState("");
@@ -46,6 +48,7 @@ export default function ReferralPage() {
         code: redeemCode,
       });
       setMessage(res.data.message || "Referral code redeemed successfully!");
+      navigate.push('/dashboard');
     } catch (err: any) {
       console.error(err);
       setMessage(err.response?.data?.error || "Error redeeming referral code.");
@@ -81,7 +84,7 @@ export default function ReferralPage() {
                 type="text"
                 value={referralCode}
                 readOnly
-                className="border p-2 w-full bg-gray-100"
+                className="border p-2 w-full bg-slate-800 rounded font-bold text-xl"
               />
             </div>
           )}
@@ -94,7 +97,7 @@ export default function ReferralPage() {
             value={redeemCode}
             onChange={(e) => setRedeemCode(e.target.value)}
             placeholder="Enter referral code"
-            className="border p-2 w-full mb-2"
+            className="border p-2 w-full mb-2 bg-slate-800 text-xl rounded font-bold"
           />
           <button
             onClick={redeemReferral}

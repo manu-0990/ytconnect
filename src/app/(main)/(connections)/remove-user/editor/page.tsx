@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function EditorResignButton() {
   const [loading, setLoading] = useState(false);
@@ -13,18 +14,11 @@ export default function EditorResignButton() {
     setError("");
 
     try {
-      const res = await fetch("/api/user/editor", {
-        method: "POST",
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error);
-      } else {
-        // On success, you may redirect or show a success message.
-        router.push("/dashboard");
-      }
-    } catch (err) {
-      setError("An unexpected error occurred.");
+      await axios.post("/api/editor/resign");
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.response?.data?.error || "An unexpected error occurred.");
+      console.log("Error: ", err);
     } finally {
       setLoading(false);
     }

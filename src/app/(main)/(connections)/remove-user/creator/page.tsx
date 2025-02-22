@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 
 interface Editor {
@@ -19,11 +18,10 @@ export default function CreatorDashboard() {
   const [editors, setEditors] = useState<Editor[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const fetchEditors = async () => {
     try {
-      const res = await axios.get("/api/user/creator/my-editors");
+      const res = await axios.get("/api/creator/my-editors");
       setEditors(res.data.editors);
     } catch (err: any) {
       console.error("Error fetching editors:", err);
@@ -39,7 +37,7 @@ export default function CreatorDashboard() {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.post("/api/user/creator", { editorId });
+      const res = await axios.post("/api/creator/remove-editors", { editorId });
       if (res.status === 200) {
         toast.success("Editor was removed successfully!");
         // Refresh the list after removal

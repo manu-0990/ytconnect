@@ -33,6 +33,11 @@ export async function POST(request: Request) {
       data: { creatorId: null },
     });
 
+    // Remove the record from the referral table if resigned in 7 days
+    await prisma.referral.delete({
+      where: { editorId: user.id }
+    });
+
     return NextResponse.json({
       message: "You have successfully resigned from your creator connection.",
     });

@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import prisma from "@/db";
 import { v4 as uuidv4 } from "uuid";
 import { getUser } from "@/lib/utils/get-user";
 
-export async function POST(request: Request) {
+export async function POST() {
   const user = await getUser();
 
   // Ensure the user is a creator.
