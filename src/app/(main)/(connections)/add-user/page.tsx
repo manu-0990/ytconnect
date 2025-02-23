@@ -3,13 +3,13 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function ReferralPage() {
   const { data: session } = useSession();
   const [role, setRole] = useState<string | null | undefined>(null);
   const [referralCode, setReferralCode] = useState("");
   const [redeemCode, setRedeemCode] = useState("");
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Set the user's role from the session.
@@ -21,17 +21,14 @@ export default function ReferralPage() {
 
   // For creators: Generate a referral code.
   const generateReferral = async () => {
-    setMessage("");
     try {
       setLoading(true);
       const res = await axios.post("/api/referral/generate");
       setReferralCode(res.data.referral.code);
-      setMessage("Referral code generated successfully!");
+      toast.success("Referral code generated successfully!");
     } catch (err: any) {
       console.error(err);
-      setMessage(
-        err.response?.data?.error || "Error generating referral code."
-      );
+      toast.error("Error generating referral code!");
     } finally {
       setLoading(false);
     }
@@ -39,16 +36,15 @@ export default function ReferralPage() {
 
   // For editors: Redeem a referral code.
   const redeemReferral = async () => {
-    setMessage("");
     try {
       setLoading(true);
-      const res = await axios.post("/api/referral/redeem", {
+      await axios.post("/api/referral/redeem", {
         code: redeemCode,
       });
-      setMessage(res.data.message || "Referral code redeemed successfully!");
+      toast.success("Referral code redeemed successfully!");
     } catch (err: any) {
       console.error(err);
-      setMessage(err.response?.data?.error || "Error redeeming referral code.");
+      toast.error("Error redeeming referral code.");
     } finally {
       setLoading(false);
     }
@@ -58,6 +54,7 @@ export default function ReferralPage() {
 
   return (
     <div className="max-w-xl mx-auto p-6">
+      <Toaster />
       <h1 className="text-2xl font-bold mb-4">Referral</h1>
 
       {role === "CREATOR" ? (
@@ -107,8 +104,6 @@ export default function ReferralPage() {
       ) : (
         <p>Your role is not recognized.</p>
       )}
-
-      {message && <p className="mt-4 text-center">{message}</p>}
     </div>
   );
 }

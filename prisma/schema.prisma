@@ -8,11 +8,11 @@ datasource db {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  name     String?
-  image    String?
-  email    String    @unique
-  role     Role?
+  id            Int       @id @default(autoincrement())
+  name          String?
+  image         String?
+  email         String    @unique
+  role          Role?
   emailVerified DateTime?
 
   // NextAuth relations
@@ -20,29 +20,29 @@ model User {
   sessions Session[]
 
   // Your additional relations:
-  editor   Editor?   // Optional relation: stores the Editor profile if the user is an editor
-  creator  Creator?  // Optional relation: stores the Creator profile if the user is a creator
+  editor  Editor? // Optional relation: stores the Editor profile if the user is an editor
+  creator Creator? // Optional relation: stores the Creator profile if the user is a creator
 
-  createdReferrals Referral[] @relation("CreatorReferrals")
+  createdReferrals  Referral[] @relation("CreatorReferrals")
   receivedReferrals Referral[] @relation("EditorReferrals")
 }
 
 model Account {
-  id                Int      @id @default(autoincrement())
+  id                Int     @id @default(autoincrement())
   userId            Int
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?  
+  refresh_token     String?
   access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
   id_token          String?
   session_state     String?
-  
-  user   User @relation(fields: [userId], references: [id])
-  
+
+  user User @relation(fields: [userId], references: [id])
+
   @@unique([provider, providerAccountId])
 }
 
@@ -55,64 +55,68 @@ model VerificationToken {
 }
 
 model Session {
-  id           String   @id @default(uuid())  // Unique session identifier
-  sessionToken String   @unique             // Session token stored in the user's browser
-  userId       Int                               // Foreign key referencing the User model
+  id           String   @id @default(uuid()) // Unique session identifier
+  sessionToken String   @unique // Session token stored in the user's browser
+  userId       Int // Foreign key referencing the User model
   user         User     @relation(fields: [userId], references: [id])
-  expires      DateTime                          // Expiration date for the session
+  expires      DateTime // Expiration date for the session
 }
 
 model Editor {
-  id        Int       @id                                // Unique editor identifier (mirrors the associated User's id)
-  user      User      @relation(fields: [id], references: [id])
-  creatorId Int?                                      // Optionally stores the associated Creator's id (foreign key)
-  creator   Creator?  @relation(fields: [creatorId], references: [id])
-  
-  videos    Video[]                                    // Stores a list of videos managed or created by the editor
-  projects  Project[]                                  // Stores a list of projects associated with the editor
+  id        Int      @id // Unique editor identifier (mirrors the associated User's id)
+  user      User     @relation(fields: [id], references: [id])
+  creatorId Int? // Optionally stores the associated Creator's id (foreign key)
+  creator   Creator? @relation(fields: [creatorId], references: [id])
+
+  videos   Video[] // Stores a list of videos managed or created by the editor
+  projects Project[] // Stores a list of projects associated with the editor
 }
 
 model Creator {
-  id       Int       @id                                // Unique creator identifier (mirrors the associated User's id)
-  user     User      @relation(fields: [id], references: [id])
-  
-  editors  Editor[]                                   // Stores a list of editors linked to the creator
-  projects Project[]                                  // Stores a list of projects associated with the creator
+  id   Int  @id // Unique creator identifier (mirrors the associated User's id)
+  user User @relation(fields: [id], references: [id])
+
+  editors  Editor[] // Stores a list of editors linked to the creator
+  projects Project[] // Stores a list of projects associated with the creator
 }
 
 model Referral {
-  id         Int      @id @default(autoincrement())
-  code       String   @unique
-  creatorId  Int
-  editorId   Int?     @unique   // Unique constraint: one editor per referral record
-  usedAt     DateTime?
-  expiresAt  DateTime?
+  id        Int       @id @default(autoincrement())
+  code      String    @unique
+  creatorId Int
+  editorId  Int?      @unique // Unique constraint: one editor per referral record
+  usedAt    DateTime?
+  expiresAt DateTime?
 
-  creator    User     @relation("CreatorReferrals", fields: [creatorId], references: [id])
-  editor     User?    @relation("EditorReferrals", fields: [editorId], references: [id])
+  creator User  @relation("CreatorReferrals", fields: [creatorId], references: [id])
+  editor  User? @relation("EditorReferrals", fields: [editorId], references: [id])
 }
 
 model Video {
-  id          Int       @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   thumbnail   String?
   title       String?
   description String?
   videoLink   String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
 
-  editorId    Int                                        // Foreign key referencing the editor's id
-  editor      Editor  @relation(fields: [editorId], references: [id])
+  editorId  Int
+  projectId Int
+  editor    Editor    @relation(fields: [editorId], references: [id])
+  Project   Project?
 }
 
 model Project {
-  id         Int    @id @default(autoincrement())
-  status     Status @default(PENDING)
-  
-  editorId   Int
-  creatorId  Int
-  editor     Editor  @relation(fields: [editorId], references: [id])
-  creator    Creator @relation(fields: [creatorId], references: [id])
+  id        Int      @id @default(autoincrement())
+  status    Status   @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  editorId  Int
+  creatorId Int
+  videoId   Int     @unique
+  editor    Editor  @relation(fields: [editorId], references: [id])
+  creator   Creator @relation(fields: [creatorId], references: [id])
+  video     Video   @relation(fields: [videoId], references: [id])
 }
 
 enum Role {
