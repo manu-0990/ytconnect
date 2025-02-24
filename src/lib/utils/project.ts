@@ -61,29 +61,35 @@ export async function updateProjectStatus(projectid: number, status: 'ACCEPTED' 
     }
 }
 
-export async function getProjectById(projectId: number) {
-    return await prisma.project.findUnique({
-        where: { id: projectId },
+export async function getAllProjectList(userId: number) {
+    const projects = await prisma.project.findMany({
+        where: {
+            OR: [
+                { creatorId: userId },
+                { editorId: userId }
+            ]
+        },
         include: {
             video: true,
-            editor: true,
-            creator: true,
         },
+        orderBy: {
+            createdAt: 'desc'
+        }
     });
+    return projects;
 }
 
-export async function getPendingProjects(id: number) {
+export async function getPendingProjects(userId: number) {
     const projects = await prisma.project.findMany({
         where: {
             status: "PENDING",
             OR: [
-                { creatorId: id },
-                { editorId: id }
-              ]
+                { creatorId: userId },
+                { editorId: userId }
+            ]
         },
         include: {
             video: true,
-            editor: true,
         },
         orderBy: {
             createdAt: "desc",

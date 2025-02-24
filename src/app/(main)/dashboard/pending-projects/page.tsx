@@ -2,11 +2,15 @@
 
 import useSWR from "swr";
 import axios from "axios";
+import { useSession } from "next-auth/react";
 
 const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 
 export default function CreatorDashboard() {
-  const { data, error, mutate } = useSWR("/api/project/pending-projects", fetcher);
+  const session = useSession();
+  const isCreator = session.data?.user.role === "CREATOR";
+
+  const { data, error, mutate } = useSWR( "/api/project/pending-projects", fetcher );
 
   if (error) return <div>Error loading projects.</div>;
   if (!data) return <div>Loading...</div>;
@@ -18,7 +22,7 @@ export default function CreatorDashboard() {
       const res = await axios.patch("/api/project/update-status", {
         projectid: projectId,
         status: "ACCEPTED",
-      }); 
+      });
       mutate();
     } catch (error: any) {
       console.error("Error accepting project:", error.response?.data || error);
@@ -58,20 +62,23 @@ export default function CreatorDashboard() {
                   <p>{project.video.description}</p>
                 </div>
               )}
-              <div className="mt-4">
-                <button
-                  onClick={() => handleAccept(project.id)}
-                  className="py-3 px-6 text-xl rounded-lg bg-green-500 hover:bg-green-600 text-white"
-                >
-                  Accept
-                </button>
-                <button
-                  onClick={() => handleReject(project.id)}
-                  className="ml-5 py-3 px-6 text-xl rounded-lg bg-red-500 hover:bg-red-600 text-white"
-                >
-                  Reject
-                </button>
-              </div>
+
+              {isCreator && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => handleAccept(project.id)}
+                    className="py-3 px-6 text-xl rounded-lg bg-green-500 hover:bg-green-600 text-white"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => handleReject(project.id)}
+                    className="ml-5 py-3 px-6 text-xl rounded-lg bg-red-500 hover:bg-red-600 text-white"
+                  >
+                    Reject
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
