@@ -5,9 +5,9 @@ import { getPendingProjects } from "@/lib/utils/project";
 export async function GET() {
   try {
     const user = await getUser();
-    if (user.role !== "CREATOR") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
+    // if (user.role !== "CREATOR") {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    // }
 
     const projects = await getPendingProjects(user.id);
 

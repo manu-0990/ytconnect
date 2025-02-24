@@ -18,8 +18,7 @@ export default function CreatorDashboard() {
       const res = await axios.patch("/api/project/update-status", {
         projectid: projectId,
         status: "ACCEPTED",
-      });
-      console.log("Accepted:", res.data); 
+      }); 
       mutate();
     } catch (error: any) {
       console.error("Error accepting project:", error.response?.data || error);
@@ -32,7 +31,6 @@ export default function CreatorDashboard() {
         projectid: projectId,
         status: "REJECTED",
       });
-      console.log("Rejected:", res.data);
       mutate();
     } catch (error: any) {
       console.error("Error rejecting project:", error.response?.data || error);

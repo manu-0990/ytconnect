@@ -72,11 +72,14 @@ export async function getProjectById(projectId: number) {
     });
 }
 
-export async function getPendingProjects(creatorId: number) {
+export async function getPendingProjects(id: number) {
     const projects = await prisma.project.findMany({
         where: {
-            creatorId,
             status: "PENDING",
+            OR: [
+                { creatorId: id },
+                { editorId: id }
+              ]
         },
         include: {
             video: true,

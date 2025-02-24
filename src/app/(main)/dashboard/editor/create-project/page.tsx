@@ -67,7 +67,7 @@ export default function CreateProjectPage() {
         <input
           type="url"
           name="thumbnail"
-          placeholder="Thumbnail URL (optional)"
+          placeholder="Thumbnail URL"
           value={formData.thumbnail}
           onChange={handleChange}
           className="border p-2 w-full bg-slate-900 rounded"
