@@ -9,6 +9,14 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      authorization: {
+        params: {
+          access_type: "offline",
+          prompt: "consent",
+          scope: "openid email profile https://www.googleapis.com/auth/youtube.upload",
+        }
+      },
+      idToken: true,
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET || "secr3t",
@@ -17,6 +25,19 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60,
   },
   callbacks: {
+    async jwt({ token, account }) {
+      if (account) {
+        console.log('Received refresh token:', account.refresh_token);
+        console.log('Received access token:', account.access_token);
+        return {
+          ...token,
+          refreshToken: account.refresh_token,
+          accessToken: account.access_token,
+        };
+      }
+      return token;
+    },
+
     async session({ session }: { session: Session }) {
       if (session.user?.email) {
         const user = await prisma.user.findUnique({
@@ -33,6 +54,4 @@ export const authOptions: NextAuthOptions = {
   },
 };
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-ignore
 export default NextAuth(authOptions);

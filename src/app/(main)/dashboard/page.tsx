@@ -8,7 +8,7 @@ export default async function Dashboard() {
   const session = await getServerSession( authOptions );
 
   if (!session) {
-    redirect("/auth/signin");
+    redirect("/api/auth/signin");
   }
   if(!session.user.role) {
     redirect("/auth/role-select");
