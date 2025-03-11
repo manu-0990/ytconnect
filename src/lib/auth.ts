@@ -27,8 +27,6 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, account }) {
       if (account) {
-        console.log('Received refresh token:', account.refresh_token);
-        console.log('Received access token:', account.access_token);
         return {
           ...token,
           refreshToken: account.refresh_token,
