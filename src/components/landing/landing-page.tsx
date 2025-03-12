@@ -7,7 +7,7 @@ export default function LandingPage() {
   const session = useSession();
 
   return (
-    <div>
+    <div className="flex items-center justify-center gap-10">
       <div>landing-page</div>
       <hr />
       {!session.data?.user.accessToken && (
