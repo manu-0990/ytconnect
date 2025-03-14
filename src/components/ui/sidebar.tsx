@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Component, UserCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useSession } from "next-auth/react";
@@ -20,12 +20,13 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
-  const [activeItem, setActiveItem] = useState<number>(1);
   const { data: session } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const profilePic = session?.user?.image;
 
-  const baseStyle = "flex items-center gap-3 cursor-pointer rounded-lg py-3 px-3 text-lg transition-colors";
+  const baseStyle =
+    "flex items-center gap-3 cursor-pointer rounded-lg py-3 px-3 text-lg transition-colors";
 
   return (
     <div className="w-60 min-h-screen bg-transparent border-r border-[#ffffff57] text-white p-2 flex flex-col justify-between">
@@ -36,14 +37,11 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
         </h1>
         <ul className="space-y-1">
           {menuItems.map((item) => {
-            const isActive = item.id === activeItem;
+            const isActive = pathname === item.url; // Set active based on URL
             return (
               <li
                 key={item.id}
-                onClick={() => {
-                  setActiveItem(item.id);
-                  router.push(item.url);
-                }}
+                onClick={() => router.push(item.url)}
                 className={twMerge(
                   clsx(baseStyle, {
                     "bg-zinc-800": isActive,
@@ -61,7 +59,12 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
 
       <div
         onClick={() => router.push("/account")}
-        className={twMerge(clsx(baseStyle, "mb-24 hover:bg-zinc-800"))}
+        className={twMerge(
+          clsx(baseStyle, {
+            "bg-zinc-800": pathname === "/account",
+            "hover:bg-zinc-800": pathname !== "/account",
+          })
+        )}
       >
         <span className="mr-2">
           {profilePic ? (
