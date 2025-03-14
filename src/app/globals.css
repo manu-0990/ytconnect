@@ -19,3 +19,22 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+::-webkit-scrollbar {
+  width: 5px; /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #282828; /* Background color of the scrollbar track */
+  border-radius: 10px; /* Rounded track corners */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #dadada; /* Scrollbar thumb color */
+  border-radius: 10px; /* Rounded thumb corners */
+  border: 2px solid transparent; /* Space around the thumb */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #979797; /* Thumb color on hover */
+}
