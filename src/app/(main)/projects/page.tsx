@@ -39,12 +39,12 @@ export default function Projects() {
   return (
     <div className="p-10 h-screen flex flex-col gap-8">
       {/* Tabs section */}
-      <div className="flex gap-6">
+      <div className=" px-3 flex gap-6">
         {tabs.map((tab) => (
           <div
             key={tab.key}
             onClick={() => setActiveTab(tab.label)}
-            className={`px-6 py-1 rounded-full cursor-pointer ${activeTab === tab.label ? 'bg-slate-500 bg-opacity-50 backdrop-blur-3xl' : 'bg-transparent'}`}
+            className={`px-5 py-1 rounded-full cursor-pointer transition-all ${activeTab === tab.label ? 'bg-slate-500 bg-opacity-50 backdrop-blur-3xl' : 'hover:bg-zinc-700  opacity-80 backdrop-blur-3xl font-medium'}`}
           >
             {tab.label}
           </div>

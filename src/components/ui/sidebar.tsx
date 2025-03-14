@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
                 className={twMerge(
                   clsx(baseStyle, {
                     "bg-zinc-800": isActive,
-                    "hover:bg-transparent": !isActive,
+                    "hover:bg-zinc-900": !isActive,
                   })
                 )}
               >
@@ -62,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
         className={twMerge(
           clsx(baseStyle, {
             "bg-zinc-800": pathname === "/account",
-            "hover:bg-zinc-800": pathname !== "/account",
+            "hover:bg-zinc-900": pathname !== "/account",
           })
         )}
       >
