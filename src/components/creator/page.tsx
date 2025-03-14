@@ -7,21 +7,21 @@ const pendingDatas = [
   {
     id: 1,
     imgURL:
-      "https://res.cloudinary.com/dw118erfr/image/upload/v1741840556/thumbnails/lzi9o9fhijgxymmahzek.jpg",
+      "https://images.pexels.com/photos/4523001/pexels-photo-4523001.jpeg?auto=compress&cs=tinysrgb&w=600",
     videoId: "",
     title: "I love you man",
   },
   {
     id: 2,
     imgURL:
-      "https://res.cloudinary.com/dw118erfr/image/upload/v1741840556/thumbnails/lzi9o9fhijgxymmahzek.jpg",
+      "https://images.pexels.com/photos/3183132/pexels-photo-3183132.jpeg?auto=compress&cs=tinysrgb&w=600",
     videoId: "",
     title: "hello bro how are you",
   },
   {
     id: 3,
     imgURL:
-      "https://res.cloudinary.com/dw118erfr/image/upload/v1741840556/thumbnails/lzi9o9fhijgxymmahzek.jpg",
+      "https://images.pexels.com/photos/8801117/pexels-photo-8801117.jpeg?auto=compress&cs=tinysrgb&w=600",
     videoId: "",
     title: "Today we will learn how to go to bed",
   },
@@ -76,7 +76,7 @@ export default function CreatorPage() {
     <div className="min-h-[100vh] p-10 grid grid-rows-2 gap-10 h-full">
       
       {/* Graph section */}
-      <div className="border border-gray-800 bg-black rounded-lg p-4">
+      <div className=" bg-[#212121] rounded-2xl p-4">
         
         {/* Analytics cards */}
         <div className="grid grid-cols-4 gap-4 mb-6">
@@ -112,27 +112,11 @@ export default function CreatorPage() {
         </div>
         
         {/* Graph */}
-        <div className="relative h-56">
+        <div className=" h-56 flex flex-col gap-2 justify-between overflow-hidden">
           {/* SVG Graph */}
-          <svg className="w-full h-full antialiased" viewBox="0 0 800 120" preserveAspectRatio="none">
-            {/* Gray line */}
-            <path 
-              d={`M 0,50 ${analyticsData.graphData.map((point, i) => 
-                `L ${(i * 50)},${100 - point.gray / 3}`).join(' ')}`} 
-              fill="none" 
-              stroke="#555" 
-              strokeWidth="1.5"
-            />
+          <div className="border w-full antialiased" >
             
-            {/* Red line */}
-            <path 
-              d={`M 0,60 ${analyticsData.graphData.map((point, i) => 
-                `L ${(i * 50)},${100 - point.red / 3}`).join(' ')}`} 
-              fill="none" 
-              stroke="#f44" 
-              strokeWidth="1.5"
-            />
-          </svg>
+          </div>
           
           {/* X-axis labels */}
           <div className="flex justify-between text-xs text-gray-500 mt-2">
@@ -146,14 +130,14 @@ export default function CreatorPage() {
       </div>
 
       {/* Pending projects section */}
-      <div className="p-4 flex flex-col gap-5">
+      <div className="py-4 flex flex-col gap-5">
         <h3 className="text-lg font-medium font-sans">Pending works</h3>
         <div className="grid grid-cols-3 gap-16">
           {pendingDatas.map((data) => (
             <YTCard
               key={`${data.id}`}
               imageUrl={`${data.imgURL}`}
-              title={`${data.title}`}
+              // title={`${data.title}`}
             />
           ))}
         </div>

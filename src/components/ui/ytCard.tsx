@@ -1,29 +1,17 @@
-import React from "react";
-import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import React from 'react';
+import Button from './button';
 
-interface YTCardProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+type YTCardType = {
   imageUrl: string;
-  title: string;
-  className?: string;
 }
 
-const baseStyle =
-  " max-h-80 block overflow-hidden rounded-lg shadow-sm hover:shadow-lg transition-shadow cursor-pointer";
-
-const YTCard = React.forwardRef<HTMLAnchorElement, YTCardProps>(
-  ({ imageUrl, title, className, ...props }, ref) => {
-    return (
-      <a ref={ref} className={twMerge(clsx(baseStyle, className))} {...props}>
-        <img
-          src={imageUrl}
-          alt={title}
-          className="w-full h-4/5 rounded-lg object-cover"
-        />
-        <h2 className="py-2 px-1 text-left text-lg">{title}</h2>
-      </a>
-    );
-  }
-);
+const YTCard = ({ imageUrl }: YTCardType) => {
+  return (
+    <div className=" border-zinc-600 py-3 rounded-lg overflow-hidden flex flex-col gap-5  h-96">
+      <img className="max-h-60 object-cover object-center rounded-lg" src={imageUrl} alt="" />
+      <p className=" border-slate-600 overflow-hidden text-ellipsis line-clamp-2 font-sans font-normal tracking-tight">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Laudantium inventore ab ducimus magnam fuga vitae fugiat sunt est, eum laborum. Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptate dolorem provident cumque laborum dignissimos labore inventore culpa vitae quasi cupiditate.</p>
+    </div>
+  );
+};
 
 export default YTCard;

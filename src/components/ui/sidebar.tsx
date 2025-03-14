@@ -29,12 +29,12 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
     "flex items-center gap-3 cursor-pointer rounded-lg py-3 px-3 text-lg transition-colors";
 
   return (
-    <div className="w-60 min-h-screen bg-transparent border-r border-[#ffffff57] text-white p-2 flex flex-col justify-between">
+    <div className="bg-[#212121] min-w-72 max-w-60 max-h-screen text-white py-2 px-5 flex flex-col justify-between">
       <div>
-        <h1 className="mt-10 mb-20 text-3xl font-bold font-sans text-center tracking-tighter flex items-center gap-2">
+        <div className="w-full mt-10 mb-20 text-3xl font-bold font-sans text-center tracking-tighter flex items-center gap-2">
           <Component size={35} />
           YT Connect
-        </h1>
+        </div>
         <ul className="space-y-1">
           {menuItems.map((item) => {
             const isActive = pathname === item.url; // Set active based on URL

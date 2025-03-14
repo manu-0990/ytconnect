@@ -7,7 +7,7 @@ type AnalyticsCardType =  {
 
 const AnalyticsCard = ({ title, value, change, positive }: AnalyticsCardType) => {
   return (
-    <div className="border border-slate-800 px-5 py-3 rounded-lg flex flex-col">
+    <div className="p-6 rounded-lg flex flex-col bg-[#1b1b1b]">
       <span className="text-sm text-gray-400">{title}</span>
       <div className="flex items-baseline gap-2">
         <span className="text-2xl font-medium">{value}</span>

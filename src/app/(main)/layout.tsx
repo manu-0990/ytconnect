@@ -14,7 +14,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen">
       <Sidebar menuItems={menuItems} />
       
-      <div className="flex-grow">
+      <div className="flex-grow min-h-screen max-h-screen">
         {children}
       </div>
     </div>
