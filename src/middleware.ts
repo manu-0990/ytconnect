@@ -9,7 +9,7 @@ export async function middleware(req: NextRequest) {
     const sessionToken = req.cookies.get('next-auth.session-token')?.value || req.cookies.get('__Secure-next-auth.session-token')?.value;
 
     if (isPublicPath && sessionToken) {
-        return NextResponse.redirect(new URL('/dashboard', req.url));
+        return NextResponse.redirect(new URL('/home', req.url));
     }
     if (path === '/api/auth/signout' && !sessionToken) {
         return NextResponse.redirect(new URL('/api/auth/signin', req.url));

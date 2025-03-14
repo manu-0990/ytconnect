@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import CreatorPage from '@/components/creator/page';
 import EditorPage from '@/components/editor/page';
 
-export default async function Dashboard() {
+export default async function Home() {
   const session = await getServerSession( authOptions );
 
   if (!session) {
@@ -18,4 +18,3 @@ export default async function Dashboard() {
     return <EditorPage />
   }
 }
-

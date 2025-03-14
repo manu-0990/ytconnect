@@ -3,7 +3,7 @@
 import { ArrowRight, Shield, Upload, Users2, Zap } from "lucide-react";
 import Button from "@/components/ui/button";
 import Card from "@/components/ui/card";
-import { redirect } from "next/navigation";
+import router from "next/router";
 import Link from "next/link";
 
 export default function LandingPage() {
@@ -28,7 +28,7 @@ export default function LandingPage() {
           <Button
             variant="large"
             className="bg-slate-200 hover:bg-white text-black font-extralight font-serif inline-flex items-center"
-            onClick={() => {redirect("/api/auth/signin")}}
+            onClick={() => {router.push("/api/auth/signin")}}
           >
             Get Started
             <ArrowRight className="ml-2 h-5 w-5" />

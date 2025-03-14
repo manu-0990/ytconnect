@@ -12,7 +12,7 @@ interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
 const baseStyles =
   "w-full rounded-md bg-[#3a3a3a] border-none px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500";
 
-const InputField: React.FC<InputFieldProps> = ({
+const Input: React.FC<InputFieldProps> = ({
   label,
   placeholder = `Enter your ${label.toLowerCase()} here...`,
   className,
@@ -54,4 +54,4 @@ const InputField: React.FC<InputFieldProps> = ({
   );
 };
 
-export default InputField;
+export default Input;

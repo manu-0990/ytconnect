@@ -1,18 +1,163 @@
-'use client'
+"use client";
 
-import { useRouter } from "next/navigation";
+import YTCard from "@/components/ui/ytCard";
+import AnalyticsCard from "@/components/ui/analyticsCard";
+
+const pendingDatas = [
+  {
+    id: 1,
+    imgURL:
+      "https://res.cloudinary.com/dw118erfr/image/upload/v1741840556/thumbnails/lzi9o9fhijgxymmahzek.jpg",
+    videoId: "",
+    title: "I love you man",
+  },
+  {
+    id: 2,
+    imgURL:
+      "https://res.cloudinary.com/dw118erfr/image/upload/v1741840556/thumbnails/lzi9o9fhijgxymmahzek.jpg",
+    videoId: "",
+    title: "hello bro how are you",
+  },
+  {
+    id: 3,
+    imgURL:
+      "https://res.cloudinary.com/dw118erfr/image/upload/v1741840556/thumbnails/lzi9o9fhijgxymmahzek.jpg",
+    videoId: "",
+    title: "Today we will learn how to go to bed",
+  },
+];
+
+// Dummy analytics data
+const analyticsData = {
+  views: {
+    value: 150,
+    change: 12.5,
+    positive: false
+  },
+  watchTime: {
+    value: 150,
+    change: 12.5,
+    positive: true
+  },
+  subscribers: {
+    value: "15k",
+    change: 13,
+    positive: true
+  },
+  earnings: {
+    value: "$150",
+    change: 12.5,
+    positive: false
+  },
+  viewsLast28Days: 236,
+  graphData: [
+    { date: '8 March 2021', red: 120, gray: 150 },
+    { date: '9 March 2021', red: 100, gray: 170 },
+    { date: '10 March 2021', red: 110, gray: 160 },
+    { date: '11 March 2021', red: 130, gray: 140 },
+    { date: '12 March 2021', red: 140, gray: 130 },
+    { date: '13 March 2021', red: 150, gray: 140 },
+    { date: '14 March 2021', red: 160, gray: 150 },
+    { date: '15 March 2021', red: 170, gray: 160 },
+    { date: '16 March 2021', red: 189, gray: 170 },
+    { date: '17 March 2021', red: 200, gray: 180 },
+    { date: '18 March 2021', red: 210, gray: 190 },
+    { date: '19 March 2021', red: 200, gray: 200 },
+    { date: '20 March 2021', red: 220, gray: 190 },
+    { date: '21 March 2021', red: 230, gray: 180 },
+    { date: '22 March 2021', red: 210, gray: 160 },
+    { date: '23 March 2021', red: 190, gray: 170 },
+  ]
+};
 
 export default function CreatorPage() {
-  const router = useRouter();
 
   return (
-    <div>
-    <h1>Creator Page</h1>
+    <div className="min-h-[100vh] p-10 grid grid-rows-2 gap-10 h-full">
+      
+      {/* Graph section */}
+      <div className="border border-gray-800 bg-black rounded-lg p-4">
+        
+        {/* Analytics cards */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <AnalyticsCard 
+            title="Views" 
+            value={analyticsData.views.value} 
+            change={analyticsData.views.change} 
+            positive={analyticsData.views.positive} 
+          />
+          <AnalyticsCard 
+            title="Watch time" 
+            value={analyticsData.watchTime.value} 
+            change={analyticsData.watchTime.change} 
+            positive={analyticsData.watchTime.positive} 
+          />
+          <AnalyticsCard 
+            title="Subscribers" 
+            value={analyticsData.subscribers.value} 
+            change={analyticsData.subscribers.change} 
+            positive={analyticsData.subscribers.positive} 
+          />
+          <AnalyticsCard 
+            title="Earnings" 
+            value={analyticsData.earnings.value} 
+            change={analyticsData.earnings.change} 
+            positive={analyticsData.earnings.positive} 
+          />
+        </div>
+        
+        {/* Info text */}
+        <div className="text-xs text-gray-500 mb-4">
+          Your channel got {analyticsData.viewsLast28Days} views in the last 28 days
+        </div>
+        
+        {/* Graph */}
+        <div className="relative h-56">
+          {/* SVG Graph */}
+          <svg className="w-full h-full antialiased" viewBox="0 0 800 120" preserveAspectRatio="none">
+            {/* Gray line */}
+            <path 
+              d={`M 0,50 ${analyticsData.graphData.map((point, i) => 
+                `L ${(i * 50)},${100 - point.gray / 3}`).join(' ')}`} 
+              fill="none" 
+              stroke="#555" 
+              strokeWidth="1.5"
+            />
+            
+            {/* Red line */}
+            <path 
+              d={`M 0,60 ${analyticsData.graphData.map((point, i) => 
+                `L ${(i * 50)},${100 - point.red / 3}`).join(' ')}`} 
+              fill="none" 
+              stroke="#f44" 
+              strokeWidth="1.5"
+            />
+          </svg>
+          
+          {/* X-axis labels */}
+          <div className="flex justify-between text-xs text-gray-500 mt-2">
+            <span>8 March 2021</span>
+            <span>12 March 2021</span>
+            <span>16 March 2021</span>
+            <span>20 March 2021</span>
+            <span>23 March 2021</span>
+          </div>
+        </div>
+      </div>
 
-    <button className="p-2 rounded border ml-5 mt-5" onClick={() => router.push('/add-user')}>Connect editor</button>
-    <button className="p-2 rounded border ml-5 mt-5" onClick={() => router.push('/remove-user/creator')}>Dicconnect editor</button>
-    <button className="p-2 rounded border ml-5 mt-5" onClick={() => router.push('/dashboard/pending-projects')}>Pending Projects</button>
-    <button className="p-2 rounded border ml-5 mt-5" onClick={() => router.push('/dashboard/history')}>History</button>
-  </div>
-  )
+      {/* Pending projects section */}
+      <div className="p-4 flex flex-col gap-5">
+        <h3 className="text-lg font-medium font-sans">Pending works</h3>
+        <div className="grid grid-cols-3 gap-16">
+          {pendingDatas.map((data) => (
+            <YTCard
+              key={`${data.id}`}
+              imageUrl={`${data.imgURL}`}
+              title={`${data.title}`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }

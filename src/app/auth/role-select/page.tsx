@@ -11,14 +11,14 @@ export default function RoleSelectPage() {
 
   useEffect(() => {
     if (session?.user?.role) {
-      router.push("/dashboard");
+      router.push("/home");
     }
   }, [session, router]);
 
   const selectRole = async (role: "CREATOR" | "EDITOR") => {
     try {
       await axios.post("/api/user/update-role", { role: role });
-      router.push("/dashboard");
+      router.push("/home");
     } catch (error) {
       console.error("Error selecting role:", error);
     }

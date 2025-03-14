@@ -15,7 +15,7 @@ export default function EditorResignButton() {
 
     try {
       await axios.post("/api/editor/resign");
-      router.push("/dashboard");
+      router.push("/home");
     } catch (err: any) {
       setError(err.response?.data?.error || "An unexpected error occurred.");
       console.log("Error: ", err);
