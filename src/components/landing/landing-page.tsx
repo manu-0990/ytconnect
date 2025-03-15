@@ -3,10 +3,11 @@
 import { ArrowRight, Shield, Upload, Users2, Zap } from "lucide-react";
 import Button from "@/components/ui/button";
 import Card from "@/components/ui/card";
-import router from "next/router";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LandingPage() {
+  const router = useRouter()
 
   return (
     <div className="min-h-screen px-24">

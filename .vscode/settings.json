@@ -1,8 +1,8 @@
 {
     "WillLuke.nextjs.hasPrompted": true,
     "editor.quickSuggestions": {
-        "comments": "off",
-        "strings": "off",
-        "other": "off"
+        "comments": "on",
+        "strings": "on",
+        "other": "on"
     }
 }
