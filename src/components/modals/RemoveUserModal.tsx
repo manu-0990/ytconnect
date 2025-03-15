@@ -119,13 +119,13 @@ export default function RemoveUserModal({ isOpen, onClose, userId }: RemoveUserM
             {session?.user?.role === "CREATOR" && (
                 <div>
                     <h1 className="mb-7 text-2xl font-semibold">Are you sure?</h1>
-                    <p className="py-3 text-lg font-extralight">Are you sure you want to remove {editors.find((editor) => editor.id === userId)?.user?.name?.split(' ')[0]}</p>
+                    <p className="py-3 text-lg font-extralight">Are you sure you want to remove {editors.find((editor) => editor.id === userId)?.user?.name?.split(' ')[0] || "user"}</p>
 
                     {error && <p className="text-red-600 mb-4">{error}</p>}
                     {editors.length === 0 && !loading && (
                         <p>No connected editors found.</p>
                     )}
-                    <div className="pt-5 flex gap-3 justify-end ">
+                    <div className="pt-5 flex gap-3 justify-end items-center">
                         <Button
                             variant="medium"
                             onClick={() => {
