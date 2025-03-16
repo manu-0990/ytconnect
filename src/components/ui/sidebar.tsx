@@ -29,7 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
     "flex items-center gap-3 cursor-pointer rounded-lg py-3 px-3 text-lg transition-colors";
 
   return (
-    <div className="bg-[#212121] min-w-72 max-w-60 max-h-screen text-white py-2 px-5 flex flex-col justify-between">
+    <div className="sticky top-0 bottom-0 flex-shrink-0 bg-[#212121] min-w-72 max-w-60 h-screen text-white py-2 px-5 flex flex-col justify-between">
       <div>
         <div className="w-full mt-10 mb-20 text-3xl font-bold font-sans text-center tracking-tighter flex items-center gap-2">
           <Component size={35} />
@@ -37,7 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
         </div>
         <ul className="space-y-1">
           {menuItems.map((item) => {
-            const isActive = pathname === item.url; // Set active based on URL
+            const isActive = pathname === item.url;
             return (
               <li
                 key={item.id}
@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
                 className={twMerge(
                   clsx(baseStyle, {
                     "bg-zinc-800": isActive,
-                    "hover:bg-transparent": !isActive,
+                    "hover:bg-zinc-900": !isActive,
                   })
                 )}
               >
@@ -62,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
         className={twMerge(
           clsx(baseStyle, {
             "bg-zinc-800": pathname === "/account",
-            "hover:bg-zinc-800": pathname !== "/account",
+            "hover:bg-zinc-900": pathname !== "/account",
           })
         )}
       >

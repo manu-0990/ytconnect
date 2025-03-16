@@ -1,15 +1,13 @@
-import React from 'react';
-import Button from './button';
-
 type YTCardType = {
-  imageUrl: string;
+  imageUrl?: string;
+  title?: string;
 }
 
-const YTCard = ({ imageUrl }: YTCardType) => {
+const YTCard = ({ imageUrl, title }: YTCardType) => {
   return (
-    <div className=" border-zinc-600 py-3 rounded-lg overflow-hidden flex flex-col gap-5  h-96">
+    <div className="hover:bg-[#212121] cursor-pointer p-3 rounded-lg overflow-hidden flex flex-col gap-5 h-88">
       <img className="max-h-60 object-cover object-center rounded-lg" src={imageUrl} alt="" />
-      <p className=" border-slate-600 overflow-hidden text-ellipsis line-clamp-2 font-sans font-normal tracking-tight">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Laudantium inventore ab ducimus magnam fuga vitae fugiat sunt est, eum laborum. Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptate dolorem provident cumque laborum dignissimos labore inventore culpa vitae quasi cupiditate.</p>
+      <p className="overflow-hidden text-ellipsis line-clamp-2 font-sans font-normal tracking-tight">{title}</p>
     </div>
   );
 };
