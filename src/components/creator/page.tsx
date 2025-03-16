@@ -15,6 +15,36 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import { after } from "node:test";
+
+// Hoverlinebar plugins
+const hoverline = {
+  id: "hoverline",
+  afterDatasetDraw: (chart, args, options) => {
+    if (!chart.chartArea) return;
+    const {
+      ctx,
+      tooltip,
+      chartArea: { top, bottom, left, right },
+      scales: { x, y },
+    } = chart;
+
+    if (tooltip && tooltip.dataPoints && tooltip.dataPoints.length) {
+      const xCoor = x.getPixelForValue(tooltip.dataPoints[0].dataIndex);
+      const yCoor = y.getPixelForValue(tooltip.dataPoints[0].parsed.y);
+      ctx.save();
+      ctx.beginPath();
+      ctx.lineWidth = 1.25;
+      ctx.strokeStyle = "rgba(41, 168, 124, 1)";
+      ctx.setLineDash([3, 6]);
+      ctx.moveTo(xCoor, yCoor);
+      ctx.lineTo(xCoor, bottom);
+      ctx.stroke();
+      ctx.closePath();
+      ctx.setLineDash([]);
+    }
+  },
+};
 
 ChartJS.register(
   CategoryScale,
@@ -24,99 +54,148 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  hoverline
 );
 const view = [12, 19, 3, 10, 2, 16, 5, 12, 3, 15];
 const subscribers = [2, 3, 20, 5, 1, 4, 6];
 const labels = ["January", "February", "March", "April", "May", "June", "July"];
-const highlightDate = new Date("2021-03-19");
 
+// Tooltip
+const getOrCreateElement = (chart) => {
+  const tooltipEl = document.getElementById("tooltip");
+  if (!tooltipEl) {
+    tooltipEl = document.createElement("div");
+    tooltipEl.style.width = "3rem";
+    tooltipEl.style.height = "1rem";
+    tooltipEl.style.background = "rgba(27, 27, 27, 0.8)";
+    tooltipEl.style.borderRadius = "30px";
+    tooltipEl.style.color = "white";
+    tooltipEl.style.opacity = 1;
+    tooltipEl.style.pointerEvents = "none";
+    tooltipEl.style.position = "absolute";
+    tooltipEl.style.transform = "translate(-50%, 0)";
+    tooltipEl.style.transition = "all .1s ease";
+    tooltipEl.style.padding = "20px";
+    chart.canvas.parentNode.appendChild(tooltipEl);
+  }
+
+  return tooltipEl;
+};
+const externalTooltipHandler = (context) => {
+  const { chart, tooltip } = context;
+  const tooltipEl = getOrCreateElement(chart);
+  // Hide if no tooltip
+  if (tooltip.opacity === 0) {
+    tooltipEl.style.opacity = 0;
+    return;
+  }
+
+  if (tooltip.body) {
+    console.log(tooltip);
+    const titleLines = tooltip.title || [];
+    const bodyLines = tooltip.body.map((b) => b.lines);
+    
+    titleLines.forEach(title => {
+      
+
+    });
+  }
+  const {offsetLeft: positionX, offsetTop: positionY} = chart.canvas;
+
+  tooltipEl.style.opacity = 1;
+  tooltipEl.style.width = "10rem";
+  tooltipEl.style.height = "2rem";
+  tooltipEl.style.borderRadius = "15px";
+  tooltipEl.style.background = "rgba(27, 27, 27, 0.9)";
+  tooltipEl.style.color = "white";
+  tooltipEl.style.pointerEvents = "none";
+  tooltipEl.style.position = "absolute";
+  tooltipEl.style.transform = "translate(-50%, 0)";
+  tooltipEl.style.transition = "all .1s ease";
+  tooltipEl.style.padding = "20px";
+  tooltipEl.style.left = positionX + tooltip.caretX + 'px';
+  tooltipEl.style.top = positionY + tooltip.caretY + 'px';
+  tooltipEl.style.font = tooltip.options.bodyFont.string;
+};
+// Chart.js Configuration
 const options = {
-  responsive: true,
+  responsive: true, // Make chart responsive
+  maintainAspectRatio: false, // Don't force fixed aspect ratio
+
   animation: {
-    easing: "easeInOutBack",
+    easing: "easeInOutBack", // Smooth animation style
   },
+
+  interaction: {
+    intersect: false, // Show tooltip even if not exactly on the point
+    axis: "x", // Interaction happens along x-axis
+    // mode: "index"
+  },
+
   plugins: {
     legend: {
-      // legend is the text that appears and top side of the graph
-      display: false,
+      display: false, // Hide legend
     },
     tooltip: {
-      // A Chart Tooltip is a small pop-up box that appears when you hover your mouse over a point, line, or bar in a chart or graph. It shows extra details about that specific data point.
-      boxWidth: 60,
-      boxHeight: 50,
+      enabled: false,
+      position: "nearest", // Positioning of tooltip
+      external: externalTooltipHandler,
     },
+    hoverline,
   },
+
   elements: {
-    // elements are the points and lines in the graph
     point: {
-      // point is the circle that appears on the graph
-      hoverRadius: 5,
-      hitRadius: 1,
-      borderWidth: 1,
+      pointStyle: "rectRounded",
+      borderColor: "#dadada", // Point border color
+      hoverRadius: 5, // Circle size on hover
+      hitRadius: 1, // Clickable area size
+      borderWidth: 1, // Point border thickness
+      pointWidth: 30,
     },
     line: {
-      // line is the line that appears on the graph
-      borderWidth: 4,
-      tension: 0.4,
-      pointBorderWidth: 10,
-      pointHoverRadius: 10,
-      pointHoverBorderWidth: 1,
+      borderWidth: 3.125, // Line thickness
+      tension: 0.4, // Line curve smoothness (0 = straight lines)
     },
   },
+
   scales: {
-    // scales are the x and y axis and use for modifying the axis of the graph
     x: {
-      // type: 'time',
-      // x axis for x axis of the graph and tell that what you want to show on x axis
       grid: {
-        // grid is the background of the graph
-        display: false,
+        display: false, // Hide vertical grid lines
       },
       ticks: {
-        stepSize: 50,
+        stepSize: 50, // Distance between x-axis labels (optional)
       },
     },
     y: {
-      // type: 'timeseries',
-      // y axis for y axis of the graph and tell that what you want to show on y axis
       grid: {
-        // grid is the background of the graph
-        color: "#3D3C41",
-        zeroLineColor: "transparent",
-        lineWidth: 2.5,
-
-        // borderWidth: 3,
-        // drawOnChartArea: false,
-        // tickLength: 0,
+        color: "#3D3C41", // Horizontal grid line color
+        lineWidth: 2.5, // Grid line thickness
         border: {
-          display: true,
+          // display: true,    // Show left y-axis border
         },
-        // offset: false,
-        // borderDash: [5, 5],
       },
-      // type: 'timeseries',
       ticks: {
-        display: false,
+        display: false, // Hide y-axis numbers
+        stepSize: 8, // Control number of grid lines
       },
       border: {
-        display: false,
+        display: false, // Hide y-axis border (redundant but clear)
       },
-      // weight: 1,
     },
   },
-  maintainAspectRatio: false, // maintainAspectRatio is used to maintain the aspect ratio of the graph
 };
 
+// Chart Data
 const data = {
-  labels,
+  labels, // X-axis labels
   datasets: [
     {
       data: view,
       borderColor: "#F76E6E",
-      fill: true,
-      // backgroundColor: "red",
-      pointBackgroundColor: "#F76E6E",
+      fill: true, // Fill area under line
     },
     {
       data: subscribers,
@@ -124,6 +203,7 @@ const data = {
     },
   ],
 };
+
 const pendingDatas = [
   {
     id: 1,
@@ -171,34 +251,17 @@ const analyticsData = {
     positive: false,
   },
   viewsLast28Days: 236,
-  graphData: [
-    { date: "8 March 2021", red: 120, gray: 150 },
-    { date: "9 March 2021", red: 100, gray: 170 },
-    { date: "10 March 2021", red: 110, gray: 160 },
-    { date: "11 March 2021", red: 130, gray: 140 },
-    { date: "12 March 2021", red: 140, gray: 130 },
-    { date: "13 March 2021", red: 150, gray: 140 },
-    { date: "14 March 2021", red: 160, gray: 150 },
-    { date: "15 March 2021", red: 170, gray: 160 },
-    { date: "16 March 2021", red: 189, gray: 170 },
-    { date: "17 March 2021", red: 200, gray: 180 },
-    { date: "18 March 2021", red: 210, gray: 190 },
-    { date: "19 March 2021", red: 200, gray: 200 },
-    { date: "20 March 2021", red: 220, gray: 190 },
-    { date: "21 March 2021", red: 230, gray: 180 },
-    { date: "22 March 2021", red: 210, gray: 160 },
-    { date: "23 March 2021", red: 190, gray: 170 },
-  ],
 };
 
 export default function CreatorPage() {
   const chartRef = useRef(null);
+  const lineRef = useRef(null);
   const [gradient, setGradient] = useState(null);
   useEffect(() => {
     if (chartRef.current) {
       const ctx = chartRef.current.ctx;
       const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-      gradient.addColorStop(0, "rgba(168, 41, 41, 0.3)"); // starting color with transparency
+      gradient.addColorStop(0, "rgba(168, 41, 41, 0.390)"); // starting color with transparency
       gradient.addColorStop(0.358, "rgba(0, 0, 0, 0)"); // fading out to transparent
       setGradient(gradient);
     }
@@ -212,7 +275,6 @@ export default function CreatorPage() {
         borderColor: "#F76E6E",
         fill: true,
         backgroundColor: gradient,
-        pointBackgroundColor: "#F76E6E",
       },
       {
         data: subscribers,
@@ -260,10 +322,11 @@ export default function CreatorPage() {
         </div>
 
         {/* Graph */}
-          {/* SVG Graph */}
-          <div className="w-full antialiased h-full">
-            <Line ref={chartRef} data={data} options={options} />
-          </div>
+        {/* SVG Graph */}
+        <div className="w-full antialiased h-full">
+          <div id="tooltip"></div>
+          <Line ref={chartRef} data={data} options={options} />
+        </div>
       </div>
 
       {/* Pending projects section */}
