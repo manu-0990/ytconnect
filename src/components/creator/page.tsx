@@ -34,9 +34,9 @@ const hoverline = {
       const yCoor = y.getPixelForValue(tooltip.dataPoints[0].parsed.y);
       ctx.save();
       ctx.beginPath();
-      ctx.lineWidth = 1.25;
+      ctx.lineWidth = 1.2;
       ctx.strokeStyle = "rgba(41, 168, 124, 1)";
-      ctx.setLineDash([3, 6]);
+      ctx.setLineDash([2, 6]);
       ctx.moveTo(xCoor, yCoor);
       ctx.lineTo(xCoor, bottom);
       ctx.stroke();
@@ -66,17 +66,21 @@ const getOrCreateElement = (chart) => {
   const tooltipEl = document.getElementById("tooltip");
   if (!tooltipEl) {
     tooltipEl = document.createElement("div");
-    tooltipEl.style.width = "3rem";
-    tooltipEl.style.height = "1rem";
-    tooltipEl.style.background = "rgba(27, 27, 27, 0.8)";
-    tooltipEl.style.borderRadius = "30px";
-    tooltipEl.style.color = "white";
+    tooltipEl.style.background = 'rgba(27, 27, 27, 0.95)';
+    tooltipEl.style.borderRadius = '12px';
+    tooltipEl.style.color = 'white';
     tooltipEl.style.opacity = 1;
-    tooltipEl.style.pointerEvents = "none";
-    tooltipEl.style.position = "absolute";
-    tooltipEl.style.transform = "translate(-50%, 0)";
-    tooltipEl.style.transition = "all .1s ease";
-    tooltipEl.style.padding = "20px";
+    tooltipEl.style.pointerEvents = 'none';
+    tooltipEl.style.position = 'absolute';
+    tooltipEl.style.transform = 'translate(-50%, -100%)';
+    tooltipEl.style.transition = 'all 0.1s ease';
+    tooltipEl.style.padding = '10px 16px';
+    tooltipEl.style.fontFamily = 'sans-serif';
+    tooltipEl.style.fontSize = '14px';
+    tooltipEl.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
+    tooltipEl.style.textAlign = 'center';
+    tooltipEl.style.zIndex = 999;
+
     chart.canvas.parentNode.appendChild(tooltipEl);
   }
 
@@ -96,16 +100,23 @@ const externalTooltipHandler = (context) => {
     const titleLines = tooltip.title || [];
     const bodyLines = tooltip.body.map((b) => b.lines);
     
-    titleLines.forEach(title => {
-      
+    // titleLines.forEach(title => {
+    //   const titleHead = document.createElement("div");
+    //   titleHead.innerHTML = title;
+    //   tooltipEl.appendChild(titleHead);
 
-    });
+
+    // });
+    tooltipEl.innerHTML = `
+      <div style="opacity: 0.7; font-size: 12px;">${titleLines}</div>
+      <div style="font-size: 18px; font-weight: bold; margin-top: 2px;">${bodyLines[0]}</div>
+    `;
   }
   const {offsetLeft: positionX, offsetTop: positionY} = chart.canvas;
 
   tooltipEl.style.opacity = 1;
-  tooltipEl.style.width = "10rem";
-  tooltipEl.style.height = "2rem";
+  tooltipEl.style.width = "9.37rem";
+  // tooltipEl.style.height = "2rem";
   tooltipEl.style.borderRadius = "15px";
   tooltipEl.style.background = "rgba(27, 27, 27, 0.9)";
   tooltipEl.style.color = "white";
@@ -113,7 +124,9 @@ const externalTooltipHandler = (context) => {
   tooltipEl.style.position = "absolute";
   tooltipEl.style.transform = "translate(-50%, 0)";
   tooltipEl.style.transition = "all .1s ease";
-  tooltipEl.style.padding = "20px";
+  tooltipEl.style.padding = "10px 16px";
+  tooltipEl.style.fontSize= "14px";
+  tooltipEl.style.boxShadow = "0px 8px 8px rgba(50, 50, 71, 0.08), 0px 8px 16px rgba(50, 50, 71, 0.06)";
   tooltipEl.style.left = positionX + tooltip.caretX + 'px';
   tooltipEl.style.top = positionY + tooltip.caretY + 'px';
   tooltipEl.style.font = tooltip.options.bodyFont.string;
@@ -148,11 +161,12 @@ const options = {
   elements: {
     point: {
       pointStyle: "rectRounded",
-      borderColor: "#dadada", // Point border color
+      pointBorderColor: '#ffffff',
+      pointRadius: 0,
       hoverRadius: 5, // Circle size on hover
       hitRadius: 1, // Clickable area size
-      borderWidth: 1, // Point border thickness
-      pointWidth: 30,
+      backgroundColor: "rgba(41, 168, 124, 1)",
+      hoverBorderWidth: 2.5,
     },
     line: {
       borderWidth: 3.125, // Line thickness
@@ -172,7 +186,7 @@ const options = {
     y: {
       grid: {
         color: "#3D3C41", // Horizontal grid line color
-        lineWidth: 2.5, // Grid line thickness
+        lineWidth: 2, // Grid line thickness
         border: {
           // display: true,    // Show left y-axis border
         },
@@ -288,7 +302,7 @@ export default function CreatorPage() {
       {/* Graph section */}
       <div className=" bg-[#212121] rounded-2xl p-4 flex flex-col ">
         {/* Analytics cards */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-4 gap-4 mb-4">
           <AnalyticsCard
             title="Views"
             value={analyticsData.views.value}
