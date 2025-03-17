@@ -6,7 +6,7 @@ const menuItems = [
     {id: 2, label: "Projects", url: "/projects", icon: <FileVideo />},
     {id: 3, label: "Team", url: "/team", icon: <Users2 />},
     {id: 4, label: "Notifications", url: "/notifications", icon: <Bell />},
-    {id: 5, label: "Settings", url: "/settings", icon: <Settings />},
+    // {id: 5, label: "Settings", url: "/settings", icon: <Settings />},
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

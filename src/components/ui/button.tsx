@@ -12,7 +12,7 @@ const variants = {
   large: "text-lg px-8 py-3",
 };
 
-const baseStyles = "bg-[#3a3a3a] text-white px-4 py-2 rounded transition-colors duration-200 hover:bg-[#4a4a4a] disabled:opacity-50 disabled:cursor-not-allowed";
+const baseStyles = "bg-[#3a3a3a] text-white px-4 py-2 rounded transition-colors duration-200 flex gap-3 hover:bg-[#4a4a4a] disabled:opacity-50 disabled:cursor-not-allowed";
 
 const Button: React.FC<ButtonProps> = ({
   children,

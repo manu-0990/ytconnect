@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Component, UserCircle } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import Account from "../account/page";
 
 interface MenuItem {
   id: number;
@@ -20,6 +21,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
+  const [isAccOpen, setIsAccOpen] = useState<boolean>(false);
   const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
@@ -58,13 +60,10 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
       </div>
 
       <div
-        onClick={() => router.push("/account")}
-        className={twMerge(
-          clsx(baseStyle, {
-            "bg-zinc-800": pathname === "/account",
-            "hover:bg-zinc-900": pathname !== "/account",
-          })
-        )}
+        onClick={(e) => {
+          setIsAccOpen(b => !b);
+        }}
+        className={twMerge(clsx(baseStyle, "hover:bg-zinc-800"))}
       >
         <span className="mr-2">
           {profilePic ? (
@@ -81,6 +80,8 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
         </span>
         Account
       </div>
+      
+      <Account  isOpen={isAccOpen} onClose={() => setIsAccOpen(false)} />
     </div>
   );
 };
