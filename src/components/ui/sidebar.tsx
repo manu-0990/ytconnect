@@ -60,7 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({ menuItems }) => {
       </div>
 
       <div
-        onClick={(e) => {
+        onClick={() => {
           setIsAccOpen(b => !b);
         }}
         className={twMerge(clsx(baseStyle, "hover:bg-zinc-800"))}
