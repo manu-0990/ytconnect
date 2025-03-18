@@ -61,7 +61,7 @@ export default function Projects() {
         {filteredProjects.map(project => (
           <YTCard
             key={project.id}
-            onClick={() => router.push(`/projects/${project.video.id}`)}
+            onClick={() => router.push(`/project/${project.video.id}`)}
             imageUrl={project.video.thumbnail === 'demo image' ? demoImage : project.video.thumbnail}
             title={project.video.title || "Untitled"}
           />
