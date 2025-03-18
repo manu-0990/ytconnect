@@ -2,6 +2,7 @@
 
 import YTCard from "@/components/ui/ytCard";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 const tabs = [
@@ -17,6 +18,8 @@ export default function Projects() {
   const [activeTab, setActiveTab] = useState<string>('All');
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -58,6 +61,7 @@ export default function Projects() {
         {filteredProjects.map(project => (
           <YTCard
             key={project.id}
+            onClick={() => router.push(`/projects/${project.video.id}`)}
             imageUrl={project.video.thumbnail === 'demo image' ? demoImage : project.video.thumbnail}
             title={project.video.title || "Untitled"}
           />
