@@ -24,15 +24,15 @@ declare module "next-auth" {
 
     interface Account {
         access_token?: string;
-        refresh_token?: string;  // Add this
+        refresh_token?: string;
         id_token?: string;
-        expires_at?: number;  // Add this
+        expires_at?: number;
     }
 
     interface JWT {
         accessToken?: string;
-        refreshToken?: string;  // Add this
-        accessTokenExpires?: number;  // Add this
+        refreshToken?: string;
+        accessTokenExpires?: number;
         idToken?: string;
         role?: 'CREATOR' | 'EDITOR' | null;
     }

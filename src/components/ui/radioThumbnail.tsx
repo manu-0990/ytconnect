@@ -1,30 +1,30 @@
 import React from "react";
 
 interface ImageOption {
-    id: string;
+    id: number;
     src: string;
 }
 
 interface ImageRadioGroupProps {
     images: ImageOption[];
-    selectedImageId: string;
-    onChange: (id: string) => void;
+    selectedThumbnailId: number;
+    onChange: (id: number) => void;
 }
 
-const ImageRadioGroup = ({ images, selectedImageId, onChange, }: ImageRadioGroupProps) => {
+const ImageRadioGroup = ({ images, selectedThumbnailId, onChange, }: ImageRadioGroupProps) => {
     return (
         <div className="space-y-3">
             {images.map((image) => {
-                const isSelected = image.id === selectedImageId;
+                const isSelected = image.id === selectedThumbnailId;
 
                 return (
                     <label
                         key={image.id}
-                        className={`w-80 block rounded-lg p-2 cursor-pointer border transition-colors ${isSelected ? "border-slate-500" : "border-neutral-700"}`}
+                        className={`w-72 block rounded-lg p-2 cursor-pointer border transition-colors ${isSelected ? "border-slate-500" : "border-neutral-700"}`}
                     >
                         <div className="flex items-center justify-between">
                             <div
-                                className={`mr-4 h-6 w-6 flex items-center justify-center rounded-full border-2 ${isSelected ? "bg-slate-100" : "border-gray-500"}`}
+                                className={`mr-2 h-6 w-6 flex items-center justify-center rounded-full border-2 ${isSelected ? "bg-slate-100" : "border-gray-500"}`}
                             >
                                 {isSelected && (
                                     <svg
@@ -42,8 +42,8 @@ const ImageRadioGroup = ({ images, selectedImageId, onChange, }: ImageRadioGroup
 
                             <img
                                 src={image.src}
-                                alt={image.id}
-                                className="border border-green-700 h-40 w-64 object-cover rounded-md"
+                                alt={image.id.toString()}
+                                className="border border-green-700 h-36 w-56 object-cover rounded-md"
                             />
                         </div>
 

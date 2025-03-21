@@ -95,8 +95,8 @@ model Referral {
 
 model Video {
   id          Int     @id @default(autoincrement())
-  thumbnail   String?
-  title       String?
+  thumbnail   Thumbnail[]
+  title       String
   description String?
   videoLink   String
 
@@ -104,6 +104,15 @@ model Video {
   projectId Int
   editor    Editor    @relation(fields: [editorId], references: [id])
   Project   Project?
+}
+
+model Thumbnail {
+  id      Int
+  videoId Int
+  video   Video  @relation(fields: [videoId], references: [id])
+  url     String
+
+  @@id([id, videoId])
 }
 
 model Project {
@@ -127,6 +136,7 @@ enum Role {
 
 enum Status {
   PENDING
+  REVIEW
   ACCEPTED
   REJECTED
 }
