@@ -1,5 +1,5 @@
 import { getUser } from "@/lib/utils/get-user";
-import { getAllProjectList } from "@/lib/utils/project";
+import { getAllProjectList,  } from "@/lib/utils/project";
 import { NextResponse } from "next/server";
 
 export async function GET() {

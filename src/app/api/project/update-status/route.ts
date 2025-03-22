@@ -11,9 +11,9 @@ export async function PATCH(req: NextRequest) {
                 { status: 204 }
             );
         }
-        if (status !== 'ACCEPTED' && status !== 'REJECTED') {
+        if (status !== 'ACCEPTED' && status !== 'REJECTED' && status !== 'REVIEW') {
             return NextResponse.json(
-                { message: "Status must be `ACCEPTED` or `REJECTED`." },
+                { message: "Status must be `ACCEPTED`, `REJECTED` OR `review`." },
                 { status: 400 }
             );
         }

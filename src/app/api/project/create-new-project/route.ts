@@ -3,6 +3,7 @@ import { getUser } from "@/lib/utils/get-user";
 import { CreateProjectInput, createProjectWithVideo } from "@/lib/utils/project";
 import { NextRequest, NextResponse } from "next/server";
 
+//This function saves the records of a projects in the db
 export async function POST(req: NextRequest) {
     try {
         const user = await getUser();
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
 
         const body = await req.json();
 
-        const { videoLink, thumbnail, title, description } = body;
+        const { videoLink, thumbnails, title, description } = body.formData;
         if (!videoLink) {
             return NextResponse.json(
                 { error: "videoLink is required." },
@@ -34,10 +35,10 @@ export async function POST(req: NextRequest) {
         }
 
         const input: CreateProjectInput = {
-            thumbnail,
+            videoLink,
+            thumbnails,
             title,
             description,
-            videoLink,
             editorId: user.id,
             creatorId: editorRecord.creatorId,
             status: 'PENDING'

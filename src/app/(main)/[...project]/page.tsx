@@ -1,35 +1,260 @@
+'use client'
+import Button from "@/components/ui/button";
+import Dropdown from "@/components/ui/dropdown";
+import ImageRadioGroup from "@/components/ui/radioThumbnail";
+import axios from "axios";
+import { CircleArrowDown, CircleArrowUp } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useRef, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
-export default function VideoDetails({ params }: {params : { project: string }}) {
-    const videoId = params.project[1];
+// Helper function to format an ISO date string into a human-readable format.
+function formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+    const day = date.getDate();
+    const month = date.toLocaleDateString("en-US", { month: "long" });
+    const year = date.getFullYear();
+
+    function getOrdinal(n: number): string {
+        if (n >= 11 && n <= 13) return `${n}th`;
+        switch (n % 10) {
+            case 1: return `${n}st`;
+            case 2: return `${n}nd`;
+            case 3: return `${n}rd`;
+            default: return `${n}th`;
+        }
+    }
+
+    return `${dayName}, ${getOrdinal(day)} ${month} ${year}`;
+}
+
+interface Video {
+    description: string;
+    editorId: number;
+    id: number;
+    projectId: number;
+    thumbnail: Thumbnail[];
+    title?: string;
+    videoLink: string;
+}
+
+interface Thumbnail {
+    id: number;
+    url: string;
+}
+
+interface ProjectDetails {
+    createdAt: string;
+    creatorId: number;
+    editorId: number;
+    id: number;
+    status: "APPROVED" | "REJECTED" | "PENDING" | "REVIEW";
+    updatedAt: string;
+    video: Video;
+    videoId: number;
+}
+
+export default function VideoDetails({ params }: { params: Promise<{ project: string[] }> }) {
+    const { project } = use(params);
+    const projectId = project[1];
+
+    const [selectedThumbnailId, setSelectedThumbnailId] = useState<number>(1);
+    const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(null);
+    const [title, setTitle] = useState("");
+    const [description, setDescription] = useState<string>("");
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState<boolean>(false);
+    const [privacyStatus, setPrivacyStatus] = useState<string>('Privacy Status');
+    const [isEditing, setIsEditing] = useState<boolean>(false);
+    const [isCreator, setIsCreator] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const textAreaRef = useRef<HTMLTextAreaElement>(null);
+    const router = useRouter();
+    const user = useSession();
+
+    useEffect(() => {
+        if (user.status === "loading") return;
+        if (!user.data) {
+            router.push('/');
+        } else if (user.data.user?.role === "CREATOR") {
+            setIsCreator(true);
+        }
+    }, [user, router]);
+
+    // Adjust the textarea height based on content and whether it's expanded
+    const adjustTextareaHeight = () => {
+        if (textAreaRef.current) {
+            textAreaRef.current.style.height = 'auto';
+            if (isDescriptionExpanded) {
+                textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
+            } else {
+                textAreaRef.current.style.height = '96px';
+            }
+        }
+    };
+
+    useEffect(() => {
+        async function fetchProjectDetails() {
+            try {
+                const res = await axios.get(`/api/project/get-project-details?projectId=${projectId}`);
+                setProjectDetails(res.data.projectDetails);
+            } catch (err: any) {
+                console.error(err.message || "Error fetching project details");
+            }
+        }
+        fetchProjectDetails();
+    }, [projectId]);
+
+    useEffect(() => {
+        if (projectDetails) {
+            setTitle(projectDetails.video.title || "");
+            setDescription(projectDetails.video.description || "");
+            if (projectDetails.video.thumbnail && projectDetails.video.thumbnail.length > 0) {
+                setSelectedThumbnailId(projectDetails.video.thumbnail[0].id);
+            }
+        }
+    }, [projectDetails]);
+
+    useEffect(() => {
+        adjustTextareaHeight();
+    }, [description, isDescriptionExpanded]);
+
+    // Prepare thumbnails for the ImageRadioGroup
+    const videoThumbnails = projectDetails?.video.thumbnail && projectDetails.video.thumbnail.length > 0
+        ? projectDetails.video.thumbnail.map((thumb) => ({
+            id: thumb.id,
+            src: thumb.url,
+        }))
+        : [{ id: 0, src: "https://res.cloudinary.com/dw118erfr/image/upload/v1741973772/thumbnails/v4dicernfro1stdqitz0.png" }];
+
+    const handleSave = async () => {
+        if (!projectDetails) return;
+        if(!title.trim()) return toast.error('Title cannot be empty')
+        setIsLoading(true);
+        try {
+            const response = await axios.patch('/api/project/update-video-details', {
+                videoId: projectDetails.videoId,
+                details: { description, title }
+            });
+            console.log('Video details updated:', response.data);
+        } catch (error) {
+            console.error('Error updating video details:', error);
+        }
+        setIsLoading(false);
+    };
+
+    const handleUpload = async () => {
+        await handleSave();
+        if(!projectDetails) return (
+            toast.error("Uploading failed."),
+            console.error("Project details not found.")
+        )
+        const a = projectDetails?.video.thumbnail[selectedThumbnailId-1].url;
+        console.log("--------->", a)
+        axios.post('/api/youtube/upload', {
+            videoLink: projectDetails?.video.videoLink,
+            title: title,
+            description: description,
+            thumbnail: projectDetails?.video.thumbnail[selectedThumbnailId-1].url,
+            privacyStatus: privacyStatus === 'Privacy Status' ? 'public' : privacyStatus
+        })
+        .then(res => (
+            toast.success('Uploading successfull.'),
+            console.log(res.data)
+        ))
+        .catch(res => console.error(res.error || 'Unexpected error occured'))
+    }
 
     return (
-        <div className="border h-full w-full p-10 flex flex-col gap-3">
-            <div className="border text-xl font-semibold font-sans">Today, 20th Mar</div>
+        <div className="w-full p-10 flex flex-col gap-3">
+            <Toaster />
+            {/* Date header */}
+            <div className=" text-xl font-semibold font-sans">
+                {projectDetails ? formatDate(projectDetails.createdAt) : "Loading date..."}
+            </div>
 
             {/* Whole container */}
-            <div className="border border-red-700 h-full w-full flex">
-
+            <div className="h-full w-full flex">
                 {/* Video part */}
-                <div className="border border-teal-700 w-4/5 p-2">
+                <div className="w-4/5 p-2 flex flex-col">
+                    <div className="border border-slate-600 cursor-pointer rounded-lg min-h-[70vh] max-h-[70vh] flex items-center justify-center">
+                        {projectDetails ? (
+                            <video controls className="max-h-[80vh] h-full">
+                                <source src={projectDetails.video.videoLink} type="video/mp4" />
+                                Your browser does not support the video tag.
+                            </video>
+                        ) : ("Loading video...")}
+                    </div>
 
-                    {/* Video div */}
-                    <div className="border border-cyan-400 h-4/6"></div>
-                    {/* Title div */}
-                    <div className="border border-cyan-400 h-1/6 p-3">Hi guys hello</div>
-                    {/* Description div */}
-                    <div className="border border-cyan-400 h-1/6"></div>
+                    <div>
+                        {projectDetails ? (
+                            <input
+                                disabled={!isEditing}
+                                type="text"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                className={`h-14 text-xl font-medium w-full p-2 bg-transparent outline-none ${!isEditing ? 'cursor-not-allowed opacity-70' : 'cursor-text'}`}
+                                placeholder="Enter title..."
+                            />
+                        ) : ("Loading title...")}
+
+                        {/* Description textarea with dynamic height */}
+                        <div className="py-3 flex flex-col">
+                            {projectDetails ? (
+                                <textarea
+                                    disabled={!isEditing}
+                                    ref={textAreaRef}
+                                    value={description}
+                                    onChange={(e) => {
+                                        setDescription(e.target.value);
+                                        adjustTextareaHeight();
+                                    }}
+                                    className={`w-full p-1 text-md tracking-tight leading-7 bg-neutral-700 rounded outline-none transition-all duration-300 resize-none overflow-hidden ${!isEditing ? 'cursor-not-allowed opacity-70' : 'cursor-text '}`}
+                                    placeholder="Enter description..."
+                                />
+                            ) : ("Loading description...")}
+
+                            {/* Toggle icon in flow */}
+                            <div
+                                className="mt-2 self-center cursor-pointer"
+                                onClick={() => setIsDescriptionExpanded(prev => !prev)}
+                            >
+                                {isDescriptionExpanded ? <CircleArrowUp /> : <CircleArrowDown />}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
+
                 {/* Thumbnail part */}
-                <div className="border border-purple-500 w-1/5 p-2">
-                    
-                </div>
+                {isCreator && <div className="border border-gray-600 bg-[#212121] rounded-lg w-1/5 p-2 flex flex-col gap-2 max-h-">
+                    <h3 className="text-xl font-sans font-medium">Thumbnails</h3>
+                    <ImageRadioGroup
+                        images={videoThumbnails}
+                        selectedThumbnailId={selectedThumbnailId}
+                        onChange={(id) => id !== 0 && setSelectedThumbnailId(id)}
+                    />
+                </div>}
             </div>
 
-            {/* All buttons */}
-            <div className="border border-yellow-500 h-20">
-                buttons
-            </div>
+            {/* Buttons container */}
+            {(isCreator || projectDetails?.status === 'REVIEW') && <div className="h-20 p-3 flex gap-5">
+                <Button variant="large" onClick={() => setIsEditing(bool => !bool)} className="bg-yellow-500 hover:bg-yellow-600" >Edit</Button>
+                <Button variant="large" disabled={isLoading} onClick={handleSave} className="bg-sky-500 hover:bg-sky-600"
+                >
+                    {isLoading ? "saving.." : "Save"}
+                </Button>
+                {isCreator &&
+                    <>
+                        <Button variant="large" onClick={handleUpload} className="bg-emerald-500 hover:bg-emerald-600" >Upload</Button>
+                        <Button variant="large" className="bg-slate-50 hover:bg-slate-200 text-black" >Review</Button>
+                        <Button variant="large" className="hover:bg-red-600" >Decline</Button>
+                    </>
+                }
+                {!isCreator && <Button variant="large">Submit</Button>}
+
+                {isCreator && <Dropdown defaultName="Privacy Status" items={['unlisted', 'private', 'public']} selectedItem={privacyStatus} onChange={val => setPrivacyStatus(val)} />}
+            </div>}
         </div>
-    )
+    );
 }

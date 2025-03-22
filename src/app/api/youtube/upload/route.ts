@@ -4,10 +4,21 @@ import { google } from "googleapis";
 import { OAuth2Client } from "google-auth-library";
 import { getUser } from "@/lib/utils/get-user";
 
+interface YTUploadDataType {
+  videoLink: string;
+  title: string;
+  description: string;
+  thumbnail?: string;
+  tags?: string[];
+  privacyStatus?: "public" | "private" | "unlisted";
+}
+
+
+//  This function is responsible for uploading a video on youtube 
 export async function POST(req: NextRequest) {
   try {
-    const { videoUrl, title, description, thumbnail, tags } = await req.json();
-    if (!videoUrl || !title) {
+    const { videoLink, title, description, thumbnail, tags, privacyStatus = 'public' }: YTUploadDataType = await req.json();
+    if (!videoLink || !title) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -28,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     oauth2Client.setCredentials({
       access_token: account.access_token,
-      refresh_token: account.refresh_token || undefined,
+      refresh_token: account.refresh_token,
       expiry_date: account.expires_at ? account.expires_at * 1000 : undefined,
     });
 
@@ -37,7 +48,7 @@ export async function POST(req: NextRequest) {
       auth: oauth2Client,
     });
 
-    const videoResponse = await axios.get(videoUrl, { responseType: "stream" });
+    const videoResponse = await axios.get(videoLink, { responseType: "stream" });
     const videoStream = videoResponse.data;
 
     const response = await youtube.videos.insert({
@@ -50,7 +61,7 @@ export async function POST(req: NextRequest) {
           categoryId: "22",
         },
         status: {
-          privacyStatus: "public",
+          privacyStatus: `${privacyStatus}`,
         },
       },
       media: {
@@ -59,7 +70,7 @@ export async function POST(req: NextRequest) {
     });
 
     const videoId = response.data.id;
-    
+
     if (videoId && thumbnail) {
       const imageResponse = await axios.get(thumbnail, { responseType: 'stream' });
 
@@ -71,13 +82,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      message: "Video uploaded successfully!",
-      videoResponse: response.data,
-    },
+    return NextResponse.json(
       {
-        status: 200
-      });
+        message: "Video uploaded successfully!",
+        videoResponse: response.data,
+      },
+      { status: 200 });
   } catch (error: any) {
     console.error("YouTube Upload Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
