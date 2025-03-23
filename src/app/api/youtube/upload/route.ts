@@ -3,8 +3,10 @@ import axios from "axios";
 import { google } from "googleapis";
 import { OAuth2Client } from "google-auth-library";
 import { getUser } from "@/lib/utils/get-user";
+import { updateProjectStatus } from "@/lib/utils/project";
 
 interface YTUploadDataType {
+  projectId: number;
   videoLink: string;
   title: string;
   description: string;
@@ -17,7 +19,7 @@ interface YTUploadDataType {
 //  This function is responsible for uploading a video on youtube 
 export async function POST(req: NextRequest) {
   try {
-    const { videoLink, title, description, thumbnail, tags, privacyStatus = 'public' }: YTUploadDataType = await req.json();
+    const { projectId, videoLink, title, description, thumbnail, tags, privacyStatus = 'public' }: YTUploadDataType = await req.json();
     if (!videoLink || !title) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
@@ -80,6 +82,22 @@ export async function POST(req: NextRequest) {
           body: imageResponse.data,
         },
       });
+    }
+    
+    if (response.statusText === "OK") {
+      let retries = 3;
+      while (retries > 0) {
+      try {
+        await updateProjectStatus(projectId, "ACCEPTED");
+        break;
+      } catch (err: any) {
+        retries--;
+        console.error("Error updating project status, retries left:", retries, err);
+        if (retries === 0) {
+        return NextResponse.json({ error: "Video uploaded, but error updating project status after multiple attempts" }, { status: 500 });
+        }
+      }
+      }
     }
 
     return NextResponse.json(

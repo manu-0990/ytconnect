@@ -3,7 +3,7 @@ import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  label?: string;
   placeholder?: string;
   className?: string;
   debounceMs?: number;
@@ -14,7 +14,7 @@ const baseStyles =
 
 const Input: React.FC<InputFieldProps> = ({
   label,
-  placeholder = `Enter your ${label.toLowerCase()} here...`,
+  placeholder = `Enter your ${label?.toLowerCase()} here...`,
   className,
   debounceMs = 300,
   onChange,
@@ -43,7 +43,7 @@ const Input: React.FC<InputFieldProps> = ({
 
   return (
     <div className="space-y-1">
-      <label className="block text-lg font-medium text-gray-200">{label}</label>
+      <label className="block text-lg opacity-80 font-medium text-gray-200">{label}</label>
       <input
         placeholder={placeholder}
         {...props}

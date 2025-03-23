@@ -1,7 +1,7 @@
 import prisma from "@/db";
 
 export interface CreateProjectInput {
-    thumbnails?: {index: number; url: string}[];
+    thumbnails?: { index: number; url: string }[];
     title: string;
     description?: string;
     videoLink: string;
@@ -30,7 +30,7 @@ export async function createProjectWithVideo(input: CreateProjectInput) {
         const thumbnail = thumbnails && await Promise.all(
             thumbnails.map(obj => prisma.thumbnail.create({
                 data: {
-                    id: (obj.index)+1,
+                    id: (obj.index) + 1,
                     videoId: video.id,
                     url: obj.url
                 }
@@ -58,11 +58,11 @@ export async function createProjectWithVideo(input: CreateProjectInput) {
     return result;
 }
 
-export async function updateProjectStatus(projectid: number, status: 'ACCEPTED' | 'REJECTED' | 'REVIEW') {
+export async function updateProjectStatus(projectId: number, status: 'ACCEPTED' | 'REJECTED' | 'PENDING') {
 
     try {
         const updatedProject = await prisma.project.update({
-            where: { id: projectid },
+            where: { id: projectId },
             data: { status }
         });
         return updatedProject;
@@ -83,8 +83,8 @@ export async function updateVideoDetails(videoId: number, details: { title: stri
         });
         return updatedVideo;
     } catch (error: any) {
-        console.error("Error updating video status:", error);
-        throw new Error("Failed to update video status.");
+        console.error("Error updating video details:", error);
+        throw new Error("Failed to update video details.");
     }
 }
 
@@ -145,4 +145,38 @@ export async function getProjectDetails(projectID: number) {
         }
     });
     return projectDetails;
+}
+
+export async function createReviewWithProjectId(projectId: number, reviewData: { title: string; description?: string; }) {
+    try {
+        const projectExists = await prisma.project.findUnique({
+            where: { id: projectId },
+        });
+
+        if (!projectExists) {
+            throw new Error(`Project with ID ${projectId} does not exist.`);
+        }
+
+        const result = await prisma.$transaction(async (prisma) => {
+            const review = await prisma.review.create({
+                data: {
+                    projectId,
+                    title: reviewData.title,
+                    description: reviewData.description ?? ""
+                }
+            });
+
+            const project = await prisma.project.update({
+                where: {id: projectId},
+                data: {status: 'REVIEW'}
+            })
+
+            return {review, project};
+        })
+
+        return result;
+    } catch (err: any) {
+        console.error('Failed to create review: ', err);
+        throw new Error('Failed to create review: ');
+    }
 }

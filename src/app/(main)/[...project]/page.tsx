@@ -1,4 +1,5 @@
 'use client'
+import ReviewMessage from "@/components/modals/ReviewMessageModal";
 import Button from "@/components/ui/button";
 import Dropdown from "@/components/ui/dropdown";
 import ImageRadioGroup from "@/components/ui/radioThumbnail";
@@ -50,7 +51,7 @@ interface ProjectDetails {
     creatorId: number;
     editorId: number;
     id: number;
-    status: "APPROVED" | "REJECTED" | "PENDING" | "REVIEW";
+    status: "ACCEPTED" | "REJECTED" | "PENDING" | "REVIEW";
     updatedAt: string;
     video: Video;
     videoId: number;
@@ -58,7 +59,7 @@ interface ProjectDetails {
 
 export default function VideoDetails({ params }: { params: Promise<{ project: string[] }> }) {
     const { project } = use(params);
-    const projectId = project[1];
+    const projectId = Number(project[1]);
 
     const [selectedThumbnailId, setSelectedThumbnailId] = useState<number>(1);
     const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(null);
@@ -69,6 +70,8 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [isCreator, setIsCreator] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isOpen, setIsOpen] = useState<boolean>(false);
+
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const router = useRouter();
     const user = useSession();
@@ -130,7 +133,7 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
 
     const handleSave = async () => {
         if (!projectDetails) return;
-        if(!title.trim()) return toast.error('Title cannot be empty')
+        if (!title.trim()) return toast.error('Title cannot be empty')
         setIsLoading(true);
         try {
             const response = await axios.patch('/api/project/update-video-details', {
@@ -145,25 +148,44 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
     };
 
     const handleUpload = async () => {
-        await handleSave();
-        if(!projectDetails) return (
-            toast.error("Uploading failed."),
-            console.error("Project details not found.")
-        )
-        const a = projectDetails?.video.thumbnail[selectedThumbnailId-1].url;
-        console.log("--------->", a)
-        axios.post('/api/youtube/upload', {
-            videoLink: projectDetails?.video.videoLink,
-            title: title,
-            description: description,
-            thumbnail: projectDetails?.video.thumbnail[selectedThumbnailId-1].url,
-            privacyStatus: privacyStatus === 'Privacy Status' ? 'public' : privacyStatus
-        })
-        .then(res => (
-            toast.success('Uploading successfull.'),
-            console.log(res.data)
-        ))
-        .catch(res => console.error(res.error || 'Unexpected error occured'))
+        try {
+            if (projectDetails?.video.title !== title || projectDetails.video.description !== description) {
+                await handleSave();
+            }
+            if (!projectDetails) {
+                toast.error("Uploading failed.");
+                console.error("Project details not found.");
+                return;
+            }
+            const response = await axios.post('/api/youtube/upload', {
+                projectId: projectDetails.id,
+                videoLink: projectDetails.video.videoLink,
+                title: title,
+                description: description,
+                thumbnail: projectDetails.video.thumbnail[selectedThumbnailId - 1].url,
+                privacyStatus: privacyStatus === 'Privacy Status' ? 'public' : privacyStatus
+            });
+            toast.success('Uploading successful.');
+            console.log(response.data);
+        } catch (error: any) {
+            toast.error("Uploading failed.");
+            console.error(error.message || 'Unexpected error occurred');
+        }
+    };
+
+    const handleReject = async () => {
+        try {
+            const rejectRes = await axios.patch('/api/project/update-status', { projectId, status: 'REJECTED' });
+            if (rejectRes.status === 200) {
+                toast.success("Project rejected successfully.");
+                router.push('/projects');
+            } else {
+                toast.error("Failed to reject the project.");
+            }
+        } catch (error: any) {
+            console.error("Error rejecting project:", error.message || error);
+            toast.error("An error occurred while rejecting the project.");
+        }
     }
 
     return (
@@ -175,12 +197,13 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
             </div>
 
             {/* Whole container */}
-            <div className="h-full w-full flex">
+            <div className="w-full flex items-start gap-4">
+
                 {/* Video part */}
-                <div className="w-4/5 p-2 flex flex-col">
-                    <div className="border border-slate-600 cursor-pointer rounded-lg min-h-[70vh] max-h-[70vh] flex items-center justify-center">
+                <div className="w-4/5 p-2 pt-0 flex flex-col">
+                    <div className="relative border border-slate-600 cursor-pointer rounded-lg min-h-[70vh] max-h-[70vh] flex items-center justify-center">
                         {projectDetails ? (
-                            <video controls className="max-h-[80vh] h-full">
+                            <video controls className="absolute max-h-[80vh] h-full">
                                 <source src={projectDetails.video.videoLink} type="video/mp4" />
                                 Your browser does not support the video tag.
                             </video>
@@ -194,7 +217,7 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                className={`h-14 text-xl font-medium w-full p-2 bg-transparent outline-none ${!isEditing ? 'cursor-not-allowed opacity-70' : 'cursor-text'}`}
+                                className={`h-14 text-xl font-medium w-full mt-2 rounded-md p-2 bg-transparent outline-none ${!isEditing ? 'cursor-not-allowed opacity-70' : 'cursor-text border border-slate-600'}`}
                                 placeholder="Enter title..."
                             />
                         ) : ("Loading title...")}
@@ -227,34 +250,43 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
                 </div>
 
                 {/* Thumbnail part */}
-                {isCreator && <div className="border border-gray-600 bg-[#212121] rounded-lg w-1/5 p-2 flex flex-col gap-2 max-h-">
-                    <h3 className="text-xl font-sans font-medium">Thumbnails</h3>
-                    <ImageRadioGroup
-                        images={videoThumbnails}
-                        selectedThumbnailId={selectedThumbnailId}
-                        onChange={(id) => id !== 0 && setSelectedThumbnailId(id)}
-                    />
-                </div>}
+                {isCreator && (
+                    <div className="border border-gray-600 bg-[#212121] rounded-lg w-1/5 p-2 flex flex-col gap-2 h-auto">
+                        <h3 className="text-xl font-sans font-medium">Thumbnails</h3>
+                        <ImageRadioGroup
+                            images={videoThumbnails}
+                            selectedThumbnailId={selectedThumbnailId}
+                            onChange={(id) => id !== 0 && setSelectedThumbnailId(id)}
+                        />
+                    </div>
+                )}
+
             </div>
 
             {/* Buttons container */}
-            {(isCreator || projectDetails?.status === 'REVIEW') && <div className="h-20 p-3 flex gap-5">
-                <Button variant="large" onClick={() => setIsEditing(bool => !bool)} className="bg-yellow-500 hover:bg-yellow-600" >Edit</Button>
-                <Button variant="large" disabled={isLoading} onClick={handleSave} className="bg-sky-500 hover:bg-sky-600"
-                >
-                    {isLoading ? "saving.." : "Save"}
-                </Button>
-                {isCreator &&
-                    <>
-                        <Button variant="large" onClick={handleUpload} className="bg-emerald-500 hover:bg-emerald-600" >Upload</Button>
-                        <Button variant="large" className="bg-slate-50 hover:bg-slate-200 text-black" >Review</Button>
-                        <Button variant="large" className="hover:bg-red-600" >Decline</Button>
-                    </>
-                }
-                {!isCreator && <Button variant="large">Submit</Button>}
+            {(projectDetails && !['ACCEPTED', 'REJECTED', 'REVIEW'].includes(projectDetails.status) && isCreator)
+                || (projectDetails && !['ACCEPTED', 'REJECTED'].includes(projectDetails.status) && !isCreator)
+                ? <div className="h-20 p-3 flex gap-5">
+                    <Button variant="large" onClick={() => setIsEditing(bool => !bool)} className="bg-yellow-500 hover:bg-yellow-600" >Edit</Button>
+                    <Button variant="large" disabled={isLoading} onClick={handleSave} className="bg-sky-500 hover:bg-sky-600"
+                    >
+                        {isLoading ? "saving.." : "Save"}
+                    </Button>
+                    {isCreator &&
+                        <>
+                            <Button variant="large" onClick={handleUpload} className="bg-emerald-500 hover:bg-emerald-600" >Upload</Button>
+                            <Button variant="large" onClick={() => (setIsOpen(true))} className="bg-slate-50 hover:bg-slate-200 text-black" >Review</Button>
+                            <Button variant="large" onClick={handleReject} className="hover:bg-red-600" >Decline</Button>
+                        </>
+                    }
+                    {!isCreator && <Button variant="large">Submit</Button>}
 
-                {isCreator && <Dropdown defaultName="Privacy Status" items={['unlisted', 'private', 'public']} selectedItem={privacyStatus} onChange={val => setPrivacyStatus(val)} />}
-            </div>}
+                    {isCreator && <Dropdown defaultName="Privacy Status" items={['unlisted', 'private', 'public']} selectedItem={privacyStatus} onChange={val => setPrivacyStatus(val)} />}
+                </div>
+                : null
+            }
+
+            <ReviewMessage projectId={projectId} isOpen={isOpen} onClose={() => setIsOpen(false)} />
         </div>
     );
 }

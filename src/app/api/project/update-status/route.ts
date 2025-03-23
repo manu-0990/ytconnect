@@ -1,24 +1,35 @@
-import { updateProjectStatus } from "@/lib/utils/project";
+import { createReviewWithProjectId, updateProjectStatus } from "@/lib/utils/project";
 import { NextRequest, NextResponse } from "next/server";
+
+interface Body {
+    projectId: number;
+    status: 'PENDING' | 'REJECTED' | 'REVIEW';
+    reviewData: {
+        title:string;
+        description: string;
+    }
+}
 
 export async function PATCH(req: NextRequest) {
     try {
-        const { projectid, status } = await req.json();
+        const { projectId, status, reviewData }: Body = await req.json();
 
-        if (!projectid || !status) {
+        if (!projectId || !status) {
             return NextResponse.json(
                 { error: "projectId and status are required fields." },
                 { status: 204 }
             );
         }
-        if (status !== 'ACCEPTED' && status !== 'REJECTED' && status !== 'REVIEW') {
+        if (status !== 'PENDING' && status !== 'REJECTED' && status !== 'REVIEW') {
             return NextResponse.json(
-                { message: "Status must be `ACCEPTED`, `REJECTED` OR `review`." },
+                { message: "Status must be `ACCEPTED`, `REJECTED` OR `REVIEW`." },
                 { status: 400 }
             );
         }
 
-        const updatedProject = await updateProjectStatus(projectid, status);
+        const updatedProject = status !== 'REVIEW' ?
+            await updateProjectStatus(projectId, status) :
+            await createReviewWithProjectId(projectId, { title: reviewData.title, description: reviewData.description });
 
         return NextResponse.json({
             message: "Status updated successfully.",

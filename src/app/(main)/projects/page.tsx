@@ -11,8 +11,9 @@ import { useState, useEffect } from "react";
 const tabs = [
   { key: 1, label: "All" },
   { key: 2, label: "Pending" },
-  { key: 3, label: "Rejected" },
-  { key: 4, label: "Accepted" }
+  { key: 3, label: "Review" },
+  { key: 4, label: "Accepted" },
+  { key: 5, label: "Rejected" },
 ];
 
 const demoImage = 'https://res.cloudinary.com/dw118erfr/image/upload/v1741973772/thumbnails/v4dicernfro1stdqitz0.png';
