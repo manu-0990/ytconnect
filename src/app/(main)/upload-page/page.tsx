@@ -1,11 +1,11 @@
 'use client';
 
+import { ChangeEvent, useRef, useState } from 'react';
 import { ThumbnailUpload } from '@/components/ThumbnailUpload';
 import Button from '@/components/ui/button';
 import { useUpload } from '@/hooks/useUpload';
 import axios from 'axios';
 import { UploadCloudIcon } from 'lucide-react';
-import { ChangeEvent, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 
 interface ThumbnailData {
@@ -14,7 +14,6 @@ interface ThumbnailData {
 }
 
 export default function UploadPage() {
-    // Video upload
     const {
         url: videoLink,
         uploading: videoUploading,
@@ -23,11 +22,13 @@ export default function UploadPage() {
         reset: resetVideo,
     } = useUpload();
 
-    // Thumbnails configuration
     const [thumbnails, setThumbnails] = useState<Array<{ url: string; index: number }>>([]);
-    const thumbnailCount = 4;
+    const maxThumbnailCount = 4;
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [thumbnailResetKey, setThumbnailResetKey] = useState(0);
+
+    const videoInputRef = useRef<HTMLInputElement>(null);
 
     const anyUploading = videoUploading;
 
@@ -35,10 +36,12 @@ export default function UploadPage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Video size validation
+        // Video size validation (500MB)
         if (file.size > 500 * 1024 * 1024) {
             toast.error('Video file must be 500MB or smaller');
-            e.target.value = '';
+            if (videoInputRef.current) {
+                videoInputRef.current.value = '';
+            }
             return;
         }
 
@@ -57,20 +60,16 @@ export default function UploadPage() {
         });
     };
 
-
-
     const handleFinalUpload = () => {
         if (!title.trim()) {
             toast.error('Title is required');
             return;
         }
-
         if (!videoLink) {
             toast.error('Video file is required');
             return;
         }
 
-        // Prepare for submission
         const formData = new FormData();
         formData.append('video', videoLink);
         formData.append('title', title);
@@ -79,16 +78,20 @@ export default function UploadPage() {
             formData.append(`thumbnail_${thumb.index}`, thumb.url);
         });
 
-        const result = axios.post('/api/project/create-new-project', { formData: { videoLink, thumbnails, title, description } })
-            .then(res => res.data);
+        axios.post('/api/project/create-new-project', { formData: { videoLink, thumbnails, title, description } })
+            .then(res => res.data)
+            .catch(() => toast.error('Upload failed'));
     };
-
 
     const handleCancel = () => {
         resetVideo();
+        if (videoInputRef.current) {
+            videoInputRef.current.value = '';
+        }
         setTitle('');
         setDescription('');
         setThumbnails([]);
+        setThumbnailResetKey(prev => prev + 1);
     };
 
     return (
@@ -104,12 +107,18 @@ export default function UploadPage() {
                             src={videoLink}
                             controls
                             className="max-w-full max-h-full"
+                            
                         />
                     ) : (
                         <label className="flex flex-col items-center justify-center cursor-pointer h-full w-full">
-                            <span className="mb-1"><UploadCloudIcon size={60} className='font-bold opacity-50' /></span>
-                            <span className="mb-1"><div className='font-bold text-lg opacity-50' >Upload Video</div></span>
+                            <span className="mb-1">
+                                <UploadCloudIcon size={60} className='font-bold opacity-50' />
+                            </span>
+                            <span className="mb-1">
+                                <div className='font-bold text-lg opacity-50'>Upload Video</div>
+                            </span>
                             <input
+                                ref={videoInputRef}
                                 type="file"
                                 accept="video/*"
                                 onChange={handleVideoChange}
@@ -119,12 +128,13 @@ export default function UploadPage() {
                     )}
 
                     {videoUploading && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-gray-800 p-1 flex items-center justify-center">
-                            <progress
-                                value={videoProgress}
-                                max={100}
-                                className="w-[90%] h-2 rounded-full"
-                            />
+                        <div className="absolute bottom-0 left-0 right-0 bg-transparent p-1 flex items-center justify-center">
+                            <div className="w-[90%] h-2 bg-gray-600 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-gray-50 transition-all duration-300"
+                                    style={{ width: `${videoProgress}%` }}
+                                />
+                            </div>
                         </div>
                     )}
                 </div>
@@ -164,9 +174,9 @@ export default function UploadPage() {
 
             <div className="w-52 px-5">
                 <h2 className="text-xl font-semibold mb-2">Thumbnails</h2>
-                {Array.from({ length: thumbnailCount }).map((_, index) => (
+                {Array.from({ length: maxThumbnailCount }).map((_, index) => (
                     <ThumbnailUpload
-                        key={index}
+                        key={`${index}-${thumbnailResetKey}`}
                         index={index}
                         uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_IMAGE_UPLOAD_PRESET!}
                         onUploadSuccess={(url) => handleThumbnailUpload(url, index)}

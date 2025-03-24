@@ -4,7 +4,7 @@ import Button from "@/components/ui/button";
 import Dropdown from "@/components/ui/dropdown";
 import ImageRadioGroup from "@/components/ui/radioThumbnail";
 import axios from "axios";
-import { CircleArrowDown, CircleArrowUp } from "lucide-react";
+import { CircleArrowDown, CircleArrowUp, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useRef, useState } from "react";
@@ -70,6 +70,7 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [isCreator, setIsCreator] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isUploading, setIsUploading] = useState<boolean>(false);
     const [isOpen, setIsOpen] = useState<boolean>(false);
 
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -131,6 +132,9 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
         }))
         : [{ id: 0, src: "https://res.cloudinary.com/dw118erfr/image/upload/v1741973772/thumbnails/v4dicernfro1stdqitz0.png" }];
 
+    // Get the URL for the selected thumbnail
+    const selectedThumbnailUrl = projectDetails?.video.thumbnail.find(t => t.id === selectedThumbnailId)?.url || "";
+
     const handleSave = async () => {
         if (!projectDetails) return;
         if (!title.trim()) return toast.error('Title cannot be empty')
@@ -149,6 +153,7 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
 
     const handleUpload = async () => {
         try {
+            setIsUploading(true);
             if (projectDetails?.video.title !== title || projectDetails.video.description !== description) {
                 await handleSave();
             }
@@ -162,7 +167,7 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
                 videoLink: projectDetails.video.videoLink,
                 title: title,
                 description: description,
-                thumbnail: projectDetails.video.thumbnail[selectedThumbnailId - 1].url,
+                thumbnail: selectedThumbnailUrl,
                 privacyStatus: privacyStatus === 'Privacy Status' ? 'public' : privacyStatus
             });
             toast.success('Uploading successful.');
@@ -170,6 +175,8 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
         } catch (error: any) {
             toast.error("Uploading failed.");
             console.error(error.message || 'Unexpected error occurred');
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -203,7 +210,11 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
                 <div className="w-4/5 p-2 pt-0 flex flex-col">
                     <div className="relative border border-slate-600 cursor-pointer rounded-lg min-h-[70vh] max-h-[70vh] flex items-center justify-center">
                         {projectDetails ? (
-                            <video controls className="absolute max-h-[80vh] h-full">
+                            <video
+                                controls
+                                poster={selectedThumbnailUrl}
+                                className="absolute max-h-[80vh] h-full"
+                            >
                                 <source src={projectDetails.video.videoLink} type="video/mp4" />
                                 Your browser does not support the video tag.
                             </video>
@@ -237,29 +248,27 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
                                     placeholder="Enter description..."
                                 />
                             ) : ("Loading description...")}
-
-                            {/* Toggle icon in flow */}
                             <div
                                 className="mt-2 self-center cursor-pointer"
                                 onClick={() => setIsDescriptionExpanded(prev => !prev)}
-                            >
-                                {isDescriptionExpanded ? <CircleArrowUp /> : <CircleArrowDown />}
-                            </div>
+                                children={isDescriptionExpanded ? <CircleArrowUp /> : <CircleArrowDown />}
+                            />
                         </div>
                     </div>
                 </div>
 
                 {/* Thumbnail part */}
-                {isCreator && (
-                    <div className="border border-gray-600 bg-[#212121] rounded-lg w-1/5 p-2 flex flex-col gap-2 h-auto">
-                        <h3 className="text-xl font-sans font-medium">Thumbnails</h3>
-                        <ImageRadioGroup
-                            images={videoThumbnails}
-                            selectedThumbnailId={selectedThumbnailId}
-                            onChange={(id) => id !== 0 && setSelectedThumbnailId(id)}
-                        />
-                    </div>
-                )}
+                {projectDetails && isCreator && !['ACCEPTED', 'REJECTED', 'REVIEW'].includes(projectDetails.status)
+                    || (projectDetails && !['ACCEPTED', 'REJECTED'].includes(projectDetails.status) && !isCreator) && (
+                        <div className="border border-gray-600 bg-[#212121] rounded-lg w-1/5 p-2 flex flex-col gap-2 h-auto">
+                            <h3 className="text-xl font-sans font-medium">Thumbnails</h3>
+                            <ImageRadioGroup
+                                images={videoThumbnails}
+                                selectedThumbnailId={selectedThumbnailId}
+                                onChange={(id) => id !== 0 && setSelectedThumbnailId(id)}
+                            />
+                        </div>
+                    )}
 
             </div>
 
@@ -274,7 +283,14 @@ export default function VideoDetails({ params }: { params: Promise<{ project: st
                     </Button>
                     {isCreator &&
                         <>
-                            <Button variant="large" onClick={handleUpload} className="bg-emerald-500 hover:bg-emerald-600" >Upload</Button>
+                            <Button variant="large" onClick={handleUpload} className="bg-emerald-500 hover:bg-emerald-600" >
+                                {isUploading ? (
+                                    <span className="flex items-center">
+                                        <Loader2 className="animate-spin mr-2" size={20} />
+                                        Uploading...
+                                    </span>
+                                ) : "Upload"}
+                            </Button>
                             <Button variant="large" onClick={() => (setIsOpen(true))} className="bg-slate-50 hover:bg-slate-200 text-black" >Review</Button>
                             <Button variant="large" onClick={handleReject} className="hover:bg-red-600" >Decline</Button>
                         </>
