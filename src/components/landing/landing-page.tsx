@@ -5,6 +5,7 @@ import Button from "@/components/ui/button";
 import Card from "@/components/ui/card";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import SigninButton from "../auth/SigninButton";
 
 export default function LandingPage() {
   const router = useRouter()
@@ -25,15 +26,8 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="flex gap-24">
-          <Button
-            variant="large"
-            className="bg-slate-200 hover:bg-white text-black font-extralight font-serif inline-flex items-center"
-            onClick={() => {router.push("/api/auth/signin")}}
-          >
-            Get Started
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
+        <div className="flex gap-20">
+          <SigninButton />
           <Link href="#features"><Button variant="large">Learn More</Button></Link>
         </div>
       </div>
