@@ -1,10 +1,6 @@
-import LandingPage from "@/components/ui/pages/LandingPage";
+import LandingPage from "@/components/pages/LandingPage";
 
 export default function Landing() {
 
-  return (
-    <div>
-      <LandingPage />
-    </div>
-  );
+  return <LandingPage />;
 }

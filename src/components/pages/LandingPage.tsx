@@ -1,7 +1,7 @@
 "use client";
 
 import { Shield, Upload, Users2, Zap } from "lucide-react";
-import { Button } from "@/components/ui/ui/button";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CustomCard from "../ui/CustomCard";

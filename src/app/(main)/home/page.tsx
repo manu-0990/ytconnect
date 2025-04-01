@@ -1,5 +1,5 @@
-import CreatorPage from '@/components/ui/pages/CreatorPage';
-import EditorPage from '@/components/ui/pages/EditorPage';
+import CreatorPage from '@/components/pages/CreatorPage';
+import EditorPage from '@/components/pages/EditorPage';
 import { authOptions } from '@/lib/auth';
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
