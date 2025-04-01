@@ -1,14 +1,14 @@
+import CreatorPage from '@/components/ui/pages/CreatorPage';
+import EditorPage from '@/components/ui/pages/EditorPage';
 import { authOptions } from '@/lib/auth';
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
-import CreatorPage from '@/components/creator/page';
-import EditorPage from '@/components/editor/page';
 
 export default async function Home() {
   const session = await getServerSession( authOptions );
 
   if (!session) {
-    redirect("/api/auth/signin");
+    redirect("/api/auth/signin");    // Need to change this area
   }
   if(!session.user.role) {
     redirect("/auth/role-select");
