@@ -9,9 +9,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <AppSidebar />
       <div className="flex min-h-screen">
         <SidebarTrigger />
-        {/* <div className="overflow-y-scroll flex-grow min-h-screen max-h-screen"> */}
-          {children}
-        {/* </div> */}
+        {children}
       </div>
     </SidebarProvider>
   );

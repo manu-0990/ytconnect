@@ -8,7 +8,7 @@ export async function POST(request: Request) {
 
     const { role } = await request.json();
     if (!role || (role !== "CREATOR" && role !== "EDITOR")) {
-      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+      return NextResponse.json({ message: "Invalid role" }, { status: 400 });
     }
 
     // Update the user's role in the database
@@ -32,6 +32,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Role updated successfully" });
   } catch (error) {
     console.error("Error updating role:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 }
