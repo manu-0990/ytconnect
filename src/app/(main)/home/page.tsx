@@ -16,6 +16,6 @@ export default async function Home() {
   } else if (session.user?.role === "CREATOR") {
     return <CreatorPage />
   } else if (session.user?.role === "EDITOR") {
-    return <EditorPage />
+    return <EditorPage user={{ ...session.user}} />
   }
 }
