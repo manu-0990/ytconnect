@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import VideoCard from "../ui/videoCard";
+import { User } from "next-auth";
 
-export default function EditorPage() {
+export default function EditorPage(user: {user: User}) {
   const [activeTab, setActiveTab] = useState("all");
 
   const videoData = [
