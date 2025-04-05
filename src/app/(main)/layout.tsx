@@ -8,7 +8,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <AppSidebar />
       <div className="flex flex-grow min-h-screen">
-        <SidebarTrigger />
+        {/* <SidebarTrigger /> */}
         {children}
       </div>
     </SidebarProvider>

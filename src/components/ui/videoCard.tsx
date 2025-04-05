@@ -8,18 +8,21 @@ interface CardDataType {
   lastUpdated?: string;
 }
 
+//  If image link not given then this fallback image will be shown
+const fallBackImage = ''
+
 export default function VideoCard(cardData: CardDataType) {
 
   return (
-    <a href={`/project/${cardData.link}`} className='bg-zinc-950 rounded-lg h-1/3 w-1/5 p-2 flex flex-col gap-2 cursor-pointer'>
+    <a href={`/project/${cardData.link}`} className='h-[40vh] rounded-lg p-2 flex flex-col gap-1 cursor-pointer'>
 
       <div className='border rounded-lg h-[70%] w-full'>
-
+        <img src={`${cardData.imgLink || fallBackImage}`} alt="" className='h-full w-full object-cover object-center rounded-lg' />
       </div>
 
-      <p className='leading-5 tracking-tight'>{`${cardData.title}`}</p>
+      <p className='leading-8 tracking-tight text-2xl'>{`${cardData.title}`}</p>
 
-      <span className='flex items-center gap-1 text-xs opacity-60'>
+      <span className='flex items-center gap-1 text-xs opacity-60 '>
         <Clock3 size={12}/>{`${cardData.lastUpdated}`}
       </span>
     </a>

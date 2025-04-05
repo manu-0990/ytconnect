@@ -17,11 +17,6 @@ const items = [
     icon: Home,
   },
   {
-    title: "Projects",
-    url: "/projects",
-    icon: FileVideo,
-  },
-  {
     title: "Team",
     url: "/team",
     icon: Users2,
