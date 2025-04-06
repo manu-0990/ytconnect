@@ -9,7 +9,7 @@ interface CardDataType {
 }
 
 //  If image link not given then this fallback image will be shown
-const fallBackImage = ''
+const fallBackImage = process.env.NEXT_PUBLIC_FALLBACK_THUMBNAIL
 
 export default function VideoCard(cardData: CardDataType) {
 

@@ -8,6 +8,8 @@ import { User } from "next-auth";
 export default function EditorPage(user: {user: User}) {
   const [activeTab, setActiveTab] = useState("all");
 
+
+  //  This is a seed data need to get these data from the backend
   const videoData = [
     {
       id: 1,
@@ -44,7 +46,6 @@ export default function EditorPage(user: {user: User}) {
     },
   ]
 
-  // Filter videos: if activeTab is "all", show everything; otherwise, filter by status.
   const filteredVideos = activeTab === "all" ? videoData : videoData.filter((video) => video.status === activeTab);
 
   return (
