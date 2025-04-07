@@ -1,3 +1,5 @@
+'use client'
+
 import { uploadToCloudinary } from '@/lib/utils/cloudinary';
 import { useState, useCallback } from 'react';
 

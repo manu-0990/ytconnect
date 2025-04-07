@@ -1,5 +1,7 @@
 // 'use client'
 
+import VideoUploader from "@/components/ui/VideoUploader";
+
 // import Button from "@/components/ui/button";
 // import YTCard from "@/components/ui/ytCard";
 // import axios from "axios";
@@ -81,3 +83,13 @@
 //     </div>
 //   );
 // }
+
+
+
+export default function page() {
+  return (
+    <div className="h-full flex-grow px-32 py-14">
+      <VideoUploader />
+    </div>
+  )
+}
