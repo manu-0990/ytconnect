@@ -1,6 +1,7 @@
-// 'use client'
+'use client'
 
 import VideoUploader from "@/components/ui/VideoUploader";
+import { useState } from "react";
 
 // import Button from "@/components/ui/button";
 // import YTCard from "@/components/ui/ytCard";
@@ -50,7 +51,7 @@ import VideoUploader from "@/components/ui/VideoUploader";
 //     <div className="p-10 h-screen flex flex-col gap-8">
 //       {/* Tabs section */}
 //       <div className="flex justify-between">
-        
+
 //         <div className="px-3 flex gap-6">
 //         {tabs.map((tab) => (
 //           <div
@@ -86,10 +87,18 @@ import VideoUploader from "@/components/ui/VideoUploader";
 
 
 
-export default function page() {
+export default function UploadPage() {
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  videoUrl ? console.log(videoUrl) : console.log('not available');
   return (
     <div className="h-full flex-grow px-32 py-14">
-      <VideoUploader />
+      <div className="h-full">
+        <VideoUploader onUploadComplete={(url: string) => setVideoUrl(url)} className='max-h-[50dvh]' />
+
+        {/* Input boxes */}
+      </div>
+
+
     </div>
   )
 }
