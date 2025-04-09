@@ -1,7 +1,7 @@
 'use client'
 
 import InputForm from "@/components/InputForm";
-import ThumbnailUploader from "@/components/ThumbnailUploader";
+import ImageUploadBox from "@/components/ImageUploadBox";
 import { Button } from "@/components/ui/button";
 import VideoUploader from "@/components/VideoUploader";
 import { useToast } from "@/hooks/use-toast";
@@ -80,14 +80,14 @@ export default function UploadPage() {
         title: "Success",
         description: data.message || "Project created successfully.",
       });
-      
+
       router.push('/home');
     } catch (error: any) {
       console.error("Upload error:", error);
       toast({
         title: "Error",
-        description:
-          error.response?.data.error || error.message || "An unexpected error occurred.",
+        description: error.response?.data.error || error.message || "An unexpected error occurred.",
+        variant: 'destructive'
       });
     }
   }
@@ -97,6 +97,7 @@ export default function UploadPage() {
 
       <div className="h-full w-2/3 flex flex-col gap-10 justify-between">
         <VideoUploader
+          videoLink={formState.videoUrl}
           onUploadComplete={(url: string) =>
             setFormState(prev => ({ ...prev, videoUrl: url }))
           }
@@ -121,7 +122,7 @@ export default function UploadPage() {
           <p className="text-xl font-medium text-left leading-5 w-full">Upload thumbnails</p>
 
           {formState.images.map((img) => (
-            <ThumbnailUploader
+            <ImageUploadBox
               key={img.id}
               imageLink={img.imageLink}
               setImageLink={(link) => setImageLinkById(img.id, link)}
@@ -130,7 +131,7 @@ export default function UploadPage() {
         </div>
 
         <div className=" w-full pt-2 flex items-center justify-around gap-6">
-          <Button onClick={() => setFormState(DEFAULT_STATE)} className="flex-grow h-12 font-bold text-lg bg-rose-500/90 hover:bg-rose-400/90">Cancel</Button>
+          <Button onClick={() => (setFormState(DEFAULT_STATE))} className="flex-grow h-12 font-bold text-lg bg-rose-500/90 hover:bg-rose-400/90">Cancel</Button>
           <Button onClick={handleUpload} className="flex-grow h-12 font-bold text-lg">Upload</Button>
         </div>
       </div>

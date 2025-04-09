@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { ArrowUpFromLine, X } from 'lucide-react';
 import { uploadToCloudinary } from '@/lib/utils/cloudinary';
 import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
 
 interface ImageUploadBoxProps {
   imageLink?: string;
@@ -11,8 +12,8 @@ interface ImageUploadBoxProps {
 export default function ImageUploadBox({ imageLink, setImageLink }: ImageUploadBoxProps) {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const {toast}=useToast();
 
   const handleBoxClick = () => {
     if (!isUploading && fileInputRef.current) {
@@ -25,7 +26,10 @@ export default function ImageUploadBox({ imageLink, setImageLink }: ImageUploadB
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file.');
+      toast({
+        title: 'Wrong file type',
+        description: 'Please select an image file.'
+      });
       return;
     }
 
@@ -41,7 +45,10 @@ export default function ImageUploadBox({ imageLink, setImageLink }: ImageUploadB
       setImageLink(uploadedImageUrl);
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Failed to upload image. Please try again.');
+      toast({
+        title: 'Upload error...',
+        description: 'Failed to upload image. Please try again.'
+      });
     } finally {
       setIsUploading(false);
     }

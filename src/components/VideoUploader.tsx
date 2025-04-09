@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowUpFromLine } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { uploadToCloudinary } from "@/lib/utils/cloudinary";
@@ -8,16 +8,22 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 
 interface VideoUploaderProps {
+  videoLink?: string | null;
   onUploadComplete: (url: string) => void;
   className?: string;
 }
 
-export default function VideoUploader({ onUploadComplete, className }: VideoUploaderProps) {
+export default function VideoUploader({ videoLink, onUploadComplete, className }: VideoUploaderProps) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(videoLink || null);
   const { toast } = useToast();
+
+  // 🔁 Sync internal state when parent resets videoLink (e.g., onCancel)
+  useEffect(() => {
+    setVideoUrl(videoLink || null);
+  }, [videoLink]);
 
   const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -40,6 +46,7 @@ export default function VideoUploader({ onUploadComplete, className }: VideoUplo
         title: "Upload Successful",
         description: "Your video has been uploaded successfully.",
       });
+
       setVideoUrl(url);
       onUploadComplete(url);
     } catch (err: any) {
@@ -56,6 +63,7 @@ export default function VideoUploader({ onUploadComplete, className }: VideoUplo
     }
   };
 
+  // 🎥 Show video if already uploaded
   if (videoUrl) {
     return (
       <div className={`${className} h-1/2 w-full flex items-center justify-center bg-slate-900`}>
@@ -68,6 +76,7 @@ export default function VideoUploader({ onUploadComplete, className }: VideoUplo
     );
   }
 
+  // ⬆️ Upload UI
   return (
     <div className={`${className} h-1/2 w-full p-16 rounded-xl flex flex-col items-center justify-around bg-slate-900`}>
       <div className="bg-gray-600 p-10 rounded-full">
