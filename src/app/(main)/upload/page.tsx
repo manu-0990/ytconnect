@@ -1,7 +1,8 @@
 'use client'
 
-import VideoUploader from "@/components/ui/VideoUploader";
-import { useState } from "react";
+import InputForm from "@/components/InputForm";
+import VideoUploader from "@/components/VideoUploader";
+import { useEffect, useState } from "react";
 
 // import Button from "@/components/ui/button";
 // import YTCard from "@/components/ui/ytCard";
@@ -89,15 +90,25 @@ import { useState } from "react";
 
 export default function UploadPage() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  videoUrl ? console.log(videoUrl) : console.log('not available');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+
+  console.log(
+    'title: ', title,
+    'description: ', description
+  )
+
   return (
     <div className="h-full flex-grow px-32 py-14">
-      <div className="h-full">
+      <div className="h-full w-2/3 flex flex-col gap-10 justify-between">
         <VideoUploader onUploadComplete={(url: string) => setVideoUrl(url)} className='max-h-[50dvh]' />
-
-        {/* Input boxes */}
+        <InputForm
+          title={title}
+          setTitle={setTitle}
+          description={description}
+          setDescription={setDescription}
+        />
       </div>
-
 
     </div>
   )

@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { ArrowUpFromLine } from "lucide-react";
-import { Input } from "./input";
 import { Progress } from "@/components/ui/progress";
 import { uploadToCloudinary } from "@/lib/utils/cloudinary";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 
 interface VideoUploaderProps {
   onUploadComplete: (url: string) => void;
@@ -58,7 +58,7 @@ export default function VideoUploader({ onUploadComplete, className }: VideoUplo
 
   if (videoUrl) {
     return (
-      <div className={`${className} h-1/2 w-2/3 flex items-center justify-center bg-slate-900`}>
+      <div className={`${className} h-1/2 w-full flex items-center justify-center bg-slate-900`}>
         <video
           src={videoUrl}
           controls
@@ -69,7 +69,7 @@ export default function VideoUploader({ onUploadComplete, className }: VideoUplo
   }
 
   return (
-    <div className={`${className} h-1/2 w-2/3 p-16 rounded-xl flex flex-col items-center justify-around bg-slate-900`}>
+    <div className={`${className} h-1/2 w-full p-16 rounded-xl flex flex-col items-center justify-around bg-slate-900`}>
       <div className="bg-gray-600 p-10 rounded-full">
         <ArrowUpFromLine size={45} />
       </div>
