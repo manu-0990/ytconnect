@@ -59,7 +59,7 @@ export default function InputForm({
         </label>
         <textarea
           placeholder="Add description of your video"
-          className="h-24 w-full resize-none bg-transparent text-white placeholder:text-slate-600 placeholder:text-lg focus:outline-none"
+          className="h-[90%] w-full resize-none bg-transparent text-white placeholder:text-slate-600 placeholder:text-lg focus:outline-none"
           value={localDescription}
           onChange={handleDescriptionChange}
         />

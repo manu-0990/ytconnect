@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import VideoUploader from "@/components/VideoUploader";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface Thumbnail {
@@ -35,6 +36,7 @@ const DEFAULT_STATE: FormState = {
 export default function UploadPage() {
   const { toast } = useToast();
   const [formState, setFormState] = useState<FormState>(DEFAULT_STATE);
+  const router = useRouter();
 
   const setImageLinkById = (id: number, newLink: string) => {
     setFormState(prev => ({
@@ -63,7 +65,6 @@ export default function UploadPage() {
       return;
     }
 
-    // Prepare the payload. Note: Only non-empty thumbnails are sent.
     const payload = {
       formData: {
         videoLink: formState.videoUrl,
@@ -79,7 +80,8 @@ export default function UploadPage() {
         title: "Success",
         description: data.message || "Project created successfully.",
       });
-      // Additional logic on success (e.g. redirect, reset form, etc.)
+      
+      router.push('/home');
     } catch (error: any) {
       console.error("Upload error:", error);
       toast({
