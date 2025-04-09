@@ -1,0 +1,96 @@
+import { useRef, useState } from 'react';
+import { ArrowUpFromLine, X } from 'lucide-react';
+import { uploadToCloudinary } from '@/lib/utils/cloudinary';
+import { Progress } from '@/components/ui/progress';
+
+interface ImageUploadBoxProps {
+  imageLink?: string;
+  setImageLink: (newLink: string) => void;
+}
+
+export default function ImageUploadBox({ imageLink, setImageLink }: ImageUploadBoxProps) {
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleBoxClick = () => {
+    if (!isUploading && fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file.');
+      return;
+    }
+
+    setUploadProgress(0);
+    setIsUploading(true);
+
+    try {
+      const preset = process.env.NEXT_PUBLIC_CLOUDINARY_IMAGE_UPLOAD_PRESET || '';
+      const uploadedImageUrl = await uploadToCloudinary(
+        file,
+        preset,
+        (progress: number) => setUploadProgress(progress));
+      setImageLink(uploadedImageUrl);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageLink('');
+    setUploadProgress(0);
+  };
+
+  return (
+    <div className="relative w-full h-40 border border-slate-600 flex items-center justify-center rounded-lg overflow-hidden bg-slate-800">
+      {imageLink ? (
+        <div className="w-full h-full relative">
+          <img
+            src={imageLink}
+            alt="Uploaded preview"
+            className="object-cover w-full h-full"
+          />
+          <button
+            type="button"
+            onClick={handleRemoveImage}
+            className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/80 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      ) : (
+        <div
+          onClick={handleBoxClick}
+          className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-slate-700/50 transition-colors"
+        >
+          <span className='p-5 rounded-full bg-gray-600'><ArrowUpFromLine size={25} /></span>
+        </div>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      {isUploading && (
+        <div className="absolute bottom-0 left-0 w-full">
+          <Progress value={uploadProgress} />
+        </div>
+      )}
+    </div>
+  );
+}

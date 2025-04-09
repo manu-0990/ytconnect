@@ -1,6 +1,7 @@
 'use client'
 
 import InputForm from "@/components/InputForm";
+import ThumbnailUploader from "@/components/ThumbnailUploader";
 import VideoUploader from "@/components/VideoUploader";
 import { useEffect, useState } from "react";
 
@@ -86,20 +87,31 @@ import { useEffect, useState } from "react";
 //   );
 // }
 
-
-
 export default function UploadPage() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [images, setImages] = useState([
+    { id: 1, imageLink: '' },
+    { id: 2, imageLink: '' },
+    { id: 3, imageLink: '' },
+    { id: 4, imageLink: '' }
+  ]);
 
-  console.log(
-    'title: ', title,
-    'description: ', description
-  )
+  const setImageLinkById = (id: number, newLink: string) => {
+    setImages(prev =>
+      prev.map(img => (img.id === id ? { ...img, imageLink: newLink } : img))
+    );
+  };
+
+  const handleSave = () => {
+    const uploadedImages = images.filter(img => img.imageLink !== '');
+    console.log('Uploaded thumbnails', uploadedImages);
+    // Now, you can send `uploadedImages` to your DB or API.
+  };
 
   return (
-    <div className="h-full flex-grow px-32 py-14">
+    <div className="h-full flex-grow pl-32 pr-16 py-14 flex gap-28 items-center justify-between">
       <div className="h-full w-2/3 flex flex-col gap-10 justify-between">
         <VideoUploader onUploadComplete={(url: string) => setVideoUrl(url)} className='max-h-[50dvh]' />
         <InputForm
@@ -108,6 +120,25 @@ export default function UploadPage() {
           description={description}
           setDescription={setDescription}
         />
+      </div>
+
+      <div className="border-2 h-full w-1/4 rounded-lg flex flex-col justify-between items-end p-6">
+        <p className="text-2xl font-medium text-left leading-5 w-full">Upload thumbnails</p>
+        {images.map((img) => (
+          <ThumbnailUploader
+            key={img.id}
+            imageLink={img.imageLink}
+            setImageLink={(link) => setImageLinkById(img.id, link)}
+          />
+        ))}
+
+        {/* <button
+          type="button"
+          onClick={handleSave}
+          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Save Thumbnails
+        </button> */}
       </div>
 
     </div>
