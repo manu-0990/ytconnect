@@ -53,7 +53,7 @@ export default function ImageUploadBox({ imageLink, setImageLink }: ImageUploadB
   };
 
   return (
-    <div className="relative w-full h-40 border border-slate-600 flex items-center justify-center rounded-lg overflow-hidden bg-slate-800">
+    <div className="relative w-5/6 h-36 border border-slate-600 flex items-center justify-center rounded-lg overflow-hidden bg-slate-800">
       {imageLink ? (
         <div className="w-full h-full relative">
           <img

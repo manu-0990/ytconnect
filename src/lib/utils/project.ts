@@ -1,7 +1,7 @@
 import prisma from "@/db";
 
 export interface CreateProjectInput {
-    thumbnails?: { index: number; url: string }[];
+    thumbnails?: { id: number; imageLink: string }[];
     title: string;
     description?: string;
     videoLink: string;
@@ -30,9 +30,9 @@ export async function createProjectWithVideo(input: CreateProjectInput) {
         const thumbnail = thumbnails && await Promise.all(
             thumbnails.map(obj => prisma.thumbnail.create({
                 data: {
-                    id: (obj.index) + 1,
+                    id: obj.id,
                     videoId: video.id,
-                    url: obj.url
+                    url: obj.imageLink
                 }
             }))
         );
