@@ -6,6 +6,9 @@ import VideoCard from "../ui/videoCard";
 import { User } from "next-auth";
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "../ui/button";
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface ProjectData {
   projectId: number;
@@ -28,6 +31,7 @@ export default function EditorHomePage({ user }: EditorPageProps) {
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchProjects() {
@@ -74,6 +78,8 @@ export default function EditorHomePage({ user }: EditorPageProps) {
         <TabsTrigger value="accepted">Accepted</TabsTrigger>
         <TabsTrigger value="rejected">Rejected</TabsTrigger>
         <TabsTrigger value="review">Review</TabsTrigger>
+
+        <Button className="ml-auto" variant='default' onClick={() => router.push('/upload')}><Plus/>Create New</Button>
       </TabsList>
 
       <TabsContent
