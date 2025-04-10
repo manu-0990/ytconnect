@@ -1,5 +1,5 @@
 import CreatorPage from '@/components/pages/CreatorPage';
-import EditorPage from '@/components/pages/EditorPage';
+import EditorHomePage from '@/components/pages/EditorHomePage';
 import RoleSelectPage from '@/components/pages/RoleSelectPage';
 import { authOptions } from '@/lib/auth';
 import { getServerSession } from 'next-auth/next';
@@ -16,6 +16,6 @@ export default async function Home() {
   } else if (session.user?.role === "CREATOR") {
     return <CreatorPage />
   } else if (session.user?.role === "EDITOR") {
-    return <EditorPage user={session.user}/>
+    return <EditorHomePage user={session.user}/>
   }
 }

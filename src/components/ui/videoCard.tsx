@@ -4,7 +4,7 @@ import React from 'react'
 interface CardDataType {
   title: string;
   imgLink?: string;
-  link: string;
+  projectId: number;
   lastUpdated?: string;
 }
 
@@ -38,7 +38,7 @@ export default function VideoCard(cardData: CardDataType) {
   };
 
   return (
-    <a href={`/project/${cardData.link}`} className='h-[40vh] rounded-lg p-2 flex flex-col gap-1 cursor-pointer'>
+    <a href={`/project/${cardData.projectId}`} className='h-[40vh] rounded-lg p-2 flex flex-col gap-1 cursor-pointer'>
 
       <div className='border rounded-lg h-[70%] w-full'>
         <img src={`${cardData.imgLink || fallBackImage}`} alt="" className='h-full w-full object-cover object-center rounded-lg' />
