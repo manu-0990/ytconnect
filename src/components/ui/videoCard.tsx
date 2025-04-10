@@ -13,6 +13,30 @@ const fallBackImage = process.env.NEXT_PUBLIC_FALLBACK_THUMBNAIL
 
 export default function VideoCard(cardData: CardDataType) {
 
+  function timeAgo(dateString?: string): string {
+    if (!dateString) return 'unknown';
+
+    const now = new Date();
+    const updated = new Date(dateString);
+    const diff = Math.floor((now.getTime() - updated.getTime()) / 1000); // seconds
+
+    const units = [
+      { name: 'year', seconds: 31536000 },
+      { name: 'month', seconds: 2592000 },
+      { name: 'week', seconds: 604800 },
+      { name: 'day', seconds: 86400 },
+      { name: 'hour', seconds: 3600 },
+      { name: 'minute', seconds: 60 },
+    ];
+
+    for (const unit of units) {
+      const value = Math.floor(diff / unit.seconds);
+      if (value >= 1) return `${value} ${unit.name}${value > 1 ? 's' : ''} ago`;
+    }
+
+    return 'just now';
+  };
+
   return (
     <a href={`/project/${cardData.link}`} className='h-[40vh] rounded-lg p-2 flex flex-col gap-1 cursor-pointer'>
 
@@ -23,7 +47,7 @@ export default function VideoCard(cardData: CardDataType) {
       <p className='leading-8 tracking-tight text-2xl'>{`${cardData.title}`}</p>
 
       <span className='flex items-center gap-1 text-xs opacity-60 '>
-        <Clock3 size={12}/>{`${cardData.lastUpdated}`}
+        <Clock3 size={12} />{timeAgo(cardData.lastUpdated)}
       </span>
     </a>
   )
