@@ -72,14 +72,21 @@ export async function updateProjectStatus(projectId: number, status: 'ACCEPTED' 
     }
 }
 
-export async function updateVideoDetails(videoId: number, details: { title: string; description: string; }) {
+export async function updateVideoDetails(videoId: number, details: { title: string; description: string; thumbnails?: { id: number, url: string }[] }) {
     try {
         const updatedVideo = await prisma.video.update({
             where: { id: videoId },
             data: {
                 title: details.title,
-                description: details.description
-            }
+                description: details.description,
+                thumbnail: {
+                    deleteMany: {},
+                    create: details.thumbnails?.map(thumbnail => ({
+                        id: thumbnail.id,
+                        url: thumbnail.url,
+                    })),
+                },
+            },
         });
         return updatedVideo;
     } catch (error: any) {
@@ -167,11 +174,11 @@ export async function createReviewWithProjectId(projectId: number, reviewData: {
             });
 
             const project = await prisma.project.update({
-                where: {id: projectId},
-                data: {status: 'REVIEW'}
+                where: { id: projectId },
+                data: { status: 'REVIEW' }
             })
 
-            return {review, project};
+            return { review, project };
         })
 
         return result;
