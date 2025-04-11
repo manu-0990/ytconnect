@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ImageUploadBoxProps {
   imageLink?: string;
-  setImageLink: (newLink: string) => void;
+  setImageLink?: (newLink: string) => void;
 }
 
 export default function ImageUploadBox({ imageLink, setImageLink }: ImageUploadBoxProps) {
@@ -42,7 +42,9 @@ export default function ImageUploadBox({ imageLink, setImageLink }: ImageUploadB
         file,
         preset,
         (progress: number) => setUploadProgress(progress));
-      setImageLink(uploadedImageUrl);
+      if(setImageLink) {
+        setImageLink(uploadedImageUrl);
+      }
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({
@@ -55,7 +57,9 @@ export default function ImageUploadBox({ imageLink, setImageLink }: ImageUploadB
   };
 
   const handleRemoveImage = () => {
-    setImageLink('');
+    if(setImageLink) {
+      setImageLink('');
+    }
     setUploadProgress(0);
   };
 
