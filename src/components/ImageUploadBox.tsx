@@ -1,22 +1,26 @@
-import { useRef, useState } from 'react';
-import { ArrowUpFromLine, X } from 'lucide-react';
-import { uploadToCloudinary } from '@/lib/utils/cloudinary';
-import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/hooks/use-toast';
+import { useRef, useState } from "react";
+import { ArrowUpFromLine, X, Check } from "lucide-react";
+import { uploadToCloudinary } from "@/lib/utils/cloudinary";
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
 
 interface ImageUploadBoxProps {
   imageLink?: string;
   setImageLink?: (newLink: string) => void;
+  selected?: boolean;
+  onSelect?: () => void;
 }
 
-export default function ImageUploadBox({ imageLink, setImageLink }: ImageUploadBoxProps) {
+export default function ImageUploadBox({ imageLink, setImageLink, selected, onSelect }: ImageUploadBoxProps) {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const {toast}=useToast();
+  const { toast } = useToast();
 
   const handleBoxClick = () => {
-    if (!isUploading && fileInputRef.current) {
+    if (imageLink && onSelect) {
+      onSelect();
+    } else if (fileInputRef.current && !isUploading) {
       fileInputRef.current.click();
     }
   };
@@ -24,53 +28,57 @@ export default function ImageUploadBox({ imageLink, setImageLink }: ImageUploadB
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       toast({
-        title: 'Wrong file type',
-        description: 'Please select an image file.'
+        title: "Wrong file type",
+        description: "Please select an image file.",
       });
       return;
     }
-
     setUploadProgress(0);
     setIsUploading(true);
-
     try {
-      const preset = process.env.NEXT_PUBLIC_CLOUDINARY_IMAGE_UPLOAD_PRESET || '';
+      const preset = process.env.NEXT_PUBLIC_CLOUDINARY_IMAGE_UPLOAD_PRESET || "";
       const uploadedImageUrl = await uploadToCloudinary(
         file,
         preset,
-        (progress: number) => setUploadProgress(progress));
-      if(setImageLink) {
+        (progress: number) => setUploadProgress(progress)
+      );
+      if (setImageLink) {
         setImageLink(uploadedImageUrl);
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error("Error uploading image:", error);
       toast({
-        title: 'Upload error...',
-        description: 'Failed to upload image. Please try again.'
+        title: "Upload error...",
+        description: "Failed to upload image. Please try again.",
       });
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleRemoveImage = () => {
-    if(setImageLink) {
-      setImageLink('');
+  const handleRemoveImage = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (setImageLink) {
+      setImageLink("");
     }
     setUploadProgress(0);
   };
 
   return (
-    <div className="relative w-5/6 h-36 border border-slate-600 flex items-center justify-center rounded-lg overflow-hidden bg-slate-800">
+    <div
+      className={`relative w-5/6 h-36 flex items-center justify-center rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
+        selected ? "border-2 border-rose-500 shadow-lg" : "border-2 border-x-accent"
+      }`}
+      onClick={handleBoxClick}
+    >
       {imageLink ? (
         <div className="w-full h-full relative">
           <img
             src={imageLink}
             alt="Uploaded preview"
-            className="object-cover w-full h-full"
+            className={`object-cover w-full h-full rounded-lg transition-transform duration-200`}
           />
           <button
             type="button"
@@ -79,16 +87,19 @@ export default function ImageUploadBox({ imageLink, setImageLink }: ImageUploadB
           >
             <X className="w-5 h-5" />
           </button>
+          {selected && (
+            <div className="absolute top-2 left-2">
+              <Check className="w-6 h-6 text-slate-950 bg-white rounded-full" />
+            </div>
+          )}
         </div>
       ) : (
-        <div
-          onClick={handleBoxClick}
-          className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-slate-700/50 transition-colors"
-        >
-          <span className='p-5 rounded-full bg-gray-600'><ArrowUpFromLine size={25} /></span>
+        <div className="w-full h-full flex flex-col items-center justify-center hover:bg-slate-700/50 transition-colors">
+          <span className="p-5 rounded-full bg-gray-600">
+            <ArrowUpFromLine size={25} />
+          </span>
         </div>
       )}
-
       <input
         ref={fileInputRef}
         type="file"
@@ -96,7 +107,6 @@ export default function ImageUploadBox({ imageLink, setImageLink }: ImageUploadB
         className="hidden"
         onChange={handleFileChange}
       />
-
       {isUploading && (
         <div className="absolute bottom-0 left-0 w-full">
           <Progress value={uploadProgress} />

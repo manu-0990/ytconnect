@@ -79,13 +79,15 @@ export async function updateVideoDetails(videoId: number, details: { title: stri
             data: {
                 title: details.title,
                 description: details.description,
-                thumbnail: {
-                    deleteMany: {},
-                    create: details.thumbnails?.map(thumbnail => ({
-                        id: thumbnail.id,
-                        url: thumbnail.url,
-                    })),
-                },
+                ...(details.thumbnails && {
+                    thumbnail: {
+                        deleteMany: {},
+                        create: details.thumbnails.map(thumbnail => ({
+                            id: thumbnail.id,
+                            url: thumbnail.url,
+                        })),
+                    },
+                }),
             },
         });
         return updatedVideo;
