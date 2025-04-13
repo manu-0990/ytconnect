@@ -7,6 +7,7 @@ interface InputFormProps {
   setTitle: (titleVal: string) => void;
   description?: string;
   setDescription?: (descriptionVal: string) => void;
+  disabled: boolean;
 }
 
 export default function InputForm({
@@ -14,6 +15,7 @@ export default function InputForm({
   setTitle,
   description,
   setDescription,
+  disabled
 }: InputFormProps) {
   // Local state for immediate UI updates.
   const [localTitle, setLocalTitle] = useState(title);
@@ -50,18 +52,20 @@ export default function InputForm({
           className="w-full placeholder:text-slate-600 placeholder:text-lg border-0 focus-visible:ring-0 focus-visible:outline-none pl-0"
           value={localTitle}
           onChange={handleTitleChange}
+          disabled={disabled}
         />
       </div>
 
       <div className="border border-white/50 p-4 flex-grow rounded-xl">
-        <label className="block text-base font-medium text-slate-400">
+        <label className="block text-sm font-medium text-slate-400">
           Description
         </label>
         <textarea
           placeholder="Add description of your video"
-          className="h-[90%] w-full resize-none bg-transparent text-white placeholder:text-slate-600 placeholder:text-lg focus:outline-none"
+          className={`h-[90%] w-full py-2 resize-none bg-transparent text-sm text-white placeholder:text-slate-600 placeholder:text-sm focus:outline-none disabled:cursor-not-allowed disabled:text-white/40`}
           value={localDescription}
           onChange={handleDescriptionChange}
+          disabled={disabled}
         />
       </div>
     </div>
