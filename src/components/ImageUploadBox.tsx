@@ -27,13 +27,23 @@ export default function ImageUploadBox({ imageLink, setImageLink, selected, onSe
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isThumbnailDisabled) return;
     const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
+    if (!file || isThumbnailDisabled) return;
+
+    const MAX_FILE_SIZE = 2 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
       toast({
-        title: "Wrong file type",
-        description: "Please select an image file.",
+        title: "File too large",
+        description: "Please select an image under 2MB",
+      });
+      e.target.value = "";
+      return;
+    }
+
+    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: `Uploading ${file.type.split('/')[1]} file not allowed.`,
       });
       return;
     }
@@ -99,28 +109,30 @@ export default function ImageUploadBox({ imageLink, setImageLink, selected, onSe
           )}
         </div>
       ) : (
-        <div className="w-full h-full flex flex-col items-center justify-center">
-          {isThumbnailDisabled ? (
-            <span className="text-center text-sm text-gray-400 p-2">
-              Uploading not available
-            </span>
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center hover:bg-slate-700/50 transition-colors">
-              <span className="p-5 rounded-full bg-gray-600">
-                <ArrowUpFromLine size={25} />
+        <>
+          <div className="w-full h-full flex flex-col items-center justify-center">
+            {isThumbnailDisabled ? (
+              <span className="text-center text-sm text-gray-400 p-2">
+                Uploading not available
               </span>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center hover:bg-slate-700/50 transition-colors">
+                <span className="p-5 rounded-full bg-gray-600">
+                  <ArrowUpFromLine size={25} />
+                </span>
+              </div>
+            )}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+            disabled={isThumbnailDisabled}
+          />
+        </>
       )}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
-        disabled={isThumbnailDisabled}
-      />
       {isUploading && (
         <div className="absolute bottom-0 left-0 w-full">
           <Progress value={uploadProgress} />
