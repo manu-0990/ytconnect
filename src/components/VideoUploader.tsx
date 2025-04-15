@@ -10,11 +10,11 @@ interface VideoUploaderProps {
   videoLink?: string | null;
   onUploadComplete: (url: string) => void;
   poster?: string;
-  isEditorReview: boolean;
+  isUserAllowed: boolean;
   className?: string;
 }
 
-export default function VideoUploader({ videoLink, onUploadComplete, poster, isEditorReview, className }: VideoUploaderProps) {
+export default function VideoUploader({ videoLink, onUploadComplete, poster, isUserAllowed, className }: VideoUploaderProps) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export default function VideoUploader({ videoLink, onUploadComplete, poster, isE
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !isEditorReview) return;
+    if (!file || !isUserAllowed) return;
 
     setUploading(true);
     setUploadProgress(0);
@@ -70,7 +70,7 @@ export default function VideoUploader({ videoLink, onUploadComplete, poster, isE
         <button
           type="button"
           onClick={() => {
-            if (isEditorReview) {
+            if (isUserAllowed) {
               setVideoUrl(null);
               onUploadComplete("");
             } else {
@@ -92,7 +92,7 @@ export default function VideoUploader({ videoLink, onUploadComplete, poster, isE
   // Upload UI
   return (
     <div className={`${className} h-1/2 w-full p-16 rounded-xl flex flex-col items-center justify-around bg-slate-900`}>
-      {isEditorReview ?
+      {isUserAllowed ?
         <>
           <div className="bg-gray-600 p-10 rounded-full">
             <ArrowUpFromLine size={45} />
