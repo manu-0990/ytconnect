@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 interface Thumbnail {
   id: number;
@@ -37,6 +38,8 @@ export default function UploadPage() {
   const { toast } = useToast();
   const [formState, setFormState] = useState<FormState>(DEFAULT_STATE);
   const router = useRouter();
+  const session = useSession();
+  const user = session.data?.user;
 
   const setImageLinkById = (id: number, newLink: string) => {
     setFormState(prev => ({
@@ -98,6 +101,7 @@ export default function UploadPage() {
       <div className="h-full w-2/3 flex flex-col gap-10 justify-between">
         <VideoUploader
           videoLink={formState.videoUrl}
+          isUserAllowed={true}
           onUploadComplete={(url: string) =>
             setFormState(prev => ({ ...prev, videoUrl: url }))
           }
@@ -113,6 +117,7 @@ export default function UploadPage() {
           setDescription={(description) =>
             setFormState(prev => ({ ...prev, description }))
           }
+          disabled={user?.role === "CREATOR"}
         />
       </div>
 
@@ -124,6 +129,7 @@ export default function UploadPage() {
           {formState.images.map((img) => (
             <ImageUploadBox
               key={img.id}
+              isThumbnailDisabled={user?.role === "CREATOR"}
               imageLink={img.imageLink}
               setImageLink={(link) => setImageLinkById(img.id, link)}
             />
