@@ -72,13 +72,14 @@ export async function updateProjectStatus(projectId: number, status: 'ACCEPTED' 
     }
 }
 
-export async function updateVideoDetails(videoId: number, details: { title: string; description: string; thumbnails?: { id: number, url: string }[] }) {
+export async function updateVideoDetails(videoId: number, details: { title: string, description: string, videoLink: string, thumbnails?: { id: number, url: string }[] }) {
     try {
         const updatedVideo = await prisma.video.update({
             where: { id: videoId },
             data: {
                 title: details.title,
                 description: details.description,
+                videoLink: details.videoLink,
                 ...(details.thumbnails && {
                     thumbnail: {
                         deleteMany: {},
