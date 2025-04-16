@@ -152,6 +152,7 @@ export async function getProjectDetails(projectID: number) {
                     thumbnail: true,
                 },
             },
+            reviews: true
         }
     });
     return projectDetails;
