@@ -1,4 +1,5 @@
 import { Clock3 } from 'lucide-react'
+import Link from 'next/link';
 import React from 'react'
 
 interface CardDataType {
@@ -38,7 +39,7 @@ export default function VideoCard(cardData: CardDataType) {
   };
 
   return (
-    <a href={`/project/${cardData.projectId}`} className='h-[40vh] rounded-lg p-2 flex flex-col gap-1 cursor-pointer'>
+    <Link href={`/project/${cardData.projectId}`} className='h-[40vh] rounded-lg p-2 flex flex-col gap-1 cursor-pointer'>
 
       <div className='border rounded-lg h-[70%] w-full'>
         <img src={`${cardData.imgLink || fallBackImage}`} alt="" className='h-full w-full object-cover object-center rounded-lg' />
@@ -49,6 +50,6 @@ export default function VideoCard(cardData: CardDataType) {
       <span className='flex items-center gap-1 text-xs opacity-60 '>
         <Clock3 size={12} />{timeAgo(cardData.lastUpdated)}
       </span>
-    </a>
+    </Link>
   )
 }
