@@ -74,24 +74,36 @@ export async function updateProjectStatus(projectId: number, status: 'ACCEPTED' 
 
 export async function updateVideoDetails(videoId: number, details: { title: string, description: string, videoLink: string, thumbnails?: { id: number, url: string }[] }) {
     try {
-        const updatedVideo = await prisma.video.update({
-            where: { id: videoId },
-            data: {
-                title: details.title,
-                description: details.description,
-                videoLink: details.videoLink,
-                ...(details.thumbnails && {
-                    thumbnail: {
-                        deleteMany: {},
-                        create: details.thumbnails.map(thumbnail => ({
-                            id: thumbnail.id,
-                            url: thumbnail.url,
-                        })),
-                    },
-                }),
-            },
+        const updatedProject = await prisma.$transaction(async () => {
+            const updatedVideo = await prisma.video.update({
+                where: { id: videoId },
+                data: {
+                    title: details.title,
+                    description: details.description,
+                    videoLink: details.videoLink,
+                    ...(details.thumbnails && {
+                        thumbnail: {
+                            deleteMany: {},
+                            create: details.thumbnails.map(thumbnail => ({
+                                id: thumbnail.id,
+                                url: thumbnail.url,
+                            })),
+                        },
+                    }),
+                },
+            });
+
+            const projectStatus = await prisma.project.update({
+                where: { videoId: videoId },
+                data: {
+                    status: "PENDING"
+                }
+            })
+            return { updatedVideo, projectStatus };
+
         });
-        return updatedVideo;
+
+        return updatedProject;
     } catch (error: any) {
         console.error("Error updating video details:", error);
         throw new Error("Failed to update video details.");
