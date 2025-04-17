@@ -1,292 +1,319 @@
-// 'use client'
-// import ReviewMessage from "@/components/modals/ReviewMessageModal";
-// import Button from "@/components/ui/button";
-// import Dropdown from "@/components/ui/dropdown";
-// import ImageRadioGroup from "@/components/ui/radioThumbnail";
-// import axios from "axios";
-// import { CircleArrowDown, CircleArrowUp } from "lucide-react";
-// import { useSession } from "next-auth/react";
-// import { useRouter } from "next/navigation";
-// import { use, useEffect, useRef, useState } from "react";
-// import toast, { Toaster } from "react-hot-toast";
+"use client"
 
-// // Helper function to format an ISO date string into a human-readable format.
-// function formatDate(dateString: string): string {
-//     const date = new Date(dateString);
-//     const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
-//     const day = date.getDate();
-//     const month = date.toLocaleDateString("en-US", { month: "long" });
-//     const year = date.getFullYear();
+import { use, useEffect, useState } from "react";
+import axios from "axios";
+import ImageUploadBox from "@/components/ImageUploadBox";
+import InputForm from "@/components/InputForm";
+import { Button } from "@/components/ui/button";
+import VideoUploader from "@/components/VideoUploader";
+import { Loader2, } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useToast } from "@/hooks/use-toast";
+import IssueMessage from "@/components/alerts/issueMessage";
 
-//     function getOrdinal(n: number): string {
-//         if (n >= 11 && n <= 13) return `${n}th`;
-//         switch (n % 10) {
-//             case 1: return `${n}st`;
-//             case 2: return `${n}nd`;
-//             case 3: return `${n}rd`;
-//             default: return `${n}th`;
-//         }
-//     }
+interface Thumbnail {
+  id: number;
+  url: string;
+  videoId: number;
+}
 
-//     return `${dayName}, ${getOrdinal(day)} ${month} ${year}`;
-// }
+interface VideoDetails {
+  title: string;
+  videoLink: string;
+  description: string | null;
+  id: number;
+  editorId: number;
+  projectId: number;
+  thumbnail: Thumbnail[];
+}
 
-// interface Video {
-//     description: string;
-//     editorId: number;
-//     id: number;
-//     projectId: number;
-//     thumbnail: Thumbnail[];
-//     title?: string;
-//     videoLink: string;
-// }
+interface ReviewType {
+  issueTitle: string;
+  issueDescription: string;
+}
 
-// interface Thumbnail {
-//     id: number;
-//     url: string;
-// }
+interface ProjectDetails {
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  creatorId: number;
+  editorId: number;
+  status: "PENDING" | "REVIEW" | "ACCEPTED" | "REJECTED";
+  video: VideoDetails;
+  reviews: ReviewType;
+}
 
-// interface ProjectDetails {
-//     createdAt: string;
-//     creatorId: number;
-//     editorId: number;
-//     id: number;
-//     status: "ACCEPTED" | "REJECTED" | "PENDING" | "REVIEW";
-//     updatedAt: string;
-//     video: Video;
-//     videoId: number;
-// }
+export default function ProjectPage({ params }: { params: Promise<{ project: string[] }> }) {
+  const { project } = use(params);
+  const projectId = Number(project[1]);
 
-// export default function VideoDetails({ params }: { params: Promise<{ project: string[] }> }) {
-//     const { project } = use(params);
-//     const projectId = Number(project[1]);
+  const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [videoLink, setVideoLink] = useState<string>("");
+  const [thumbnails, setThumbnails] = useState<{ id: number; url: string }[]>([]);
+  const [issueTitle, setIssueTitle] = useState<string>('');
+  const [issueDescription, setIssueDescription] = useState<string>('');
+  const [selectedThumbnail, setSelectedThumbnail] = useState<number | null>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [status, setStatus] = useState<ProjectDetails["status"]>('PENDING');
 
-//     const [selectedThumbnailId, setSelectedThumbnailId] = useState<number>(1);
-//     const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(null);
-//     const [title, setTitle] = useState("");
-//     const [description, setDescription] = useState<string>("");
-//     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState<boolean>(false);
-//     const [privacyStatus, setPrivacyStatus] = useState<string>('Privacy Status');
-//     const [isEditing, setIsEditing] = useState<boolean>(false);
-//     const [isCreator, setIsCreator] = useState<boolean>(false);
-//     const [isLoading, setIsLoading] = useState<boolean>(false);
-//     const [isOpen, setIsOpen] = useState<boolean>(false);
+  const { toast } = useToast();
 
-//     const textAreaRef = useRef<HTMLTextAreaElement>(null);
-//     const router = useRouter();
-//     const user = useSession();
+  const session = useSession();
+  const user = session.data?.user;
 
-//     useEffect(() => {
-//         if (user.status === "loading") return;
-//         if (!user.data) {
-//             router.push('/');
-//         } else if (user.data.user?.role === "CREATOR") {
-//             setIsCreator(true);
-//         }
-//     }, [user, router]);
+  const isCreatorPending = user?.role === 'CREATOR' && status === 'PENDING';
+  const isEditorReview = user?.role === 'EDITOR' && status === 'REVIEW';
 
-//     // Adjust the textarea height based on content and whether it's expanded
-//     const adjustTextareaHeight = () => {
-//         if (textAreaRef.current) {
-//             textAreaRef.current.style.height = 'auto';
-//             if (isDescriptionExpanded) {
-//                 textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
-//             } else {
-//                 textAreaRef.current.style.height = '96px';
-//             }
-//         }
-//     };
+  const formDisabled = !isCreatorPending && !isEditorReview;
+  const isThumbnailDisabled = user?.role === 'CREATOR' || !isEditorReview;
 
-//     useEffect(() => {
-//         async function fetchProjectDetails() {
-//             try {
-//                 const res = await axios.get(`/api/project/get-project-details?projectId=${projectId}`);
-//                 setProjectDetails(res.data.projectDetails);
-//             } catch (err: any) {
-//                 console.error(err.message || "Error fetching project details");
-//             }
-//         }
-//         fetchProjectDetails();
-//     }, [projectId]);
+  // Fetching all the projects data available from db when component mounts first.
+  useEffect(() => {
+    axios
+      .get(`/api/project/get-project-details?projectId=${projectId}`)
+      .then((response) => {
+        const details = response.data.projectDetails as ProjectDetails;
+        setProjectDetails(details);
+        setStatus(details.status)
+        setTitle(details.video.title);
+        setDescription(details.video.description || "");
+        setIssueTitle(details.reviews.issueTitle);
+        setIssueDescription(details.reviews.issueDescription);
+        setVideoLink(details.video.videoLink);
+        const fetchedThumbs = details.video.thumbnail.map((t) => ({ id: t.id, url: t.url }));
+        const paddedThumbs = Array.from({ length: 4 }, (_, index) => ({
+          id: index + 1,
+          url: fetchedThumbs[index]?.url || "",
+        }));
+        setThumbnails(paddedThumbs);
+        const initialSelection = paddedThumbs.findIndex((thumb) => thumb.url.trim() !== "");
+        setSelectedThumbnail(initialSelection >= 0 ? initialSelection : null);
+      })
+      .catch((error) => {
+        console.error("Error fetching project details", error);
+      });
+  }, [projectId]);
 
-//     useEffect(() => {
-//         if (projectDetails) {
-//             setTitle(projectDetails.video.title || "");
-//             setDescription(projectDetails.video.description || "");
-//             if (projectDetails.video.thumbnail && projectDetails.video.thumbnail.length > 0) {
-//                 setSelectedThumbnailId(projectDetails.video.thumbnail[0].id);
-//             }
-//         }
-//     }, [projectDetails]);
+  // If new thumbnail is uploaded then update them in the local state
+  const updateThumbnail = (index: number, newUrl: string) => {
+    setThumbnails((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], url: newUrl };
+      return copy;
+    });
 
-//     useEffect(() => {
-//         adjustTextareaHeight();
-//     }, [description, isDescriptionExpanded]);
+    if (selectedThumbnail === index && newUrl.trim() === "") {
+      setSelectedThumbnail(null);
+    }
+  };
 
-//     // Prepare thumbnails for the ImageRadioGroup
-//     const videoThumbnails = projectDetails?.video.thumbnail && projectDetails.video.thumbnail.length > 0
-//         ? projectDetails.video.thumbnail.map((thumb) => ({
-//             id: thumb.id,
-//             src: thumb.url,
-//         }))
-//         : [{ id: 0, src: "https://res.cloudinary.com/dw118erfr/image/upload/v1741973772/thumbnails/v4dicernfro1stdqitz0.png" }];
+  // If the project is discarded 
+  const handleDiscard = async () => {
+    try {
+      const discardedProject = await axios.patch('/api/project/update-status', { projectId, status: "REJECTED" });
+      if(discardedProject.statusText === "OK") {
+        toast({
+          title: "Discarded",
+          description: "Project workspace is now blocked."
+        });
+      }
+    } catch(error: any) {
+      console.error(error || 'An unexpected error occurred.');
+      toast({
+        title: "Unknown error",
+        description: `${error.message || 'Project could not be discarded.'}`,
+        variant: "destructive"
+      });
+    }
+  }
 
-//     const handleSave = async () => {
-//         if (!projectDetails) return;
-//         if (!title.trim()) return toast.error('Title cannot be empty')
-//         setIsLoading(true);
-//         try {
-//             const response = await axios.patch('/api/project/update-video-details', {
-//                 videoId: projectDetails.videoId,
-//                 details: { description, title }
-//             });
-//             console.log('Video details updated:', response.data);
-//         } catch (error) {
-//             console.error('Error updating video details:', error);
-//         }
-//         setIsLoading(false);
-//     };
+  // Function to save the data in the db updated by the editor in review mode 
+  const handleEditorUpload = async () => {
+    setIsUploading(true);
+    if (!title.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Title is required',
+        variant: 'destructive'
+      });
+      return;
+    }
 
-//     const handleUpload = async () => {
-//         try {
-//             if (projectDetails?.video.title !== title || projectDetails.video.description !== description) {
-//                 await handleSave();
-//             }
-//             if (!projectDetails) {
-//                 toast.error("Uploading failed.");
-//                 console.error("Project details not found.");
-//                 return;
-//             }
-//             const response = await axios.post('/api/youtube/upload', {
-//                 projectId: projectDetails.id,
-//                 videoLink: projectDetails.video.videoLink,
-//                 title: title,
-//                 description: description,
-//                 thumbnail: projectDetails.video.thumbnail[selectedThumbnailId - 1].url,
-//                 privacyStatus: privacyStatus === 'Privacy Status' ? 'public' : privacyStatus
-//             });
-//             toast.success('Uploading successful.');
-//             console.log(response.data);
-//         } catch (error: any) {
-//             toast.error("Uploading failed.");
-//             console.error(error.message || 'Unexpected error occurred');
-//         }
-//     };
+    if (!videoLink) {
+      toast({
+        title: 'Error',
+        description: 'Video file is required',
+        variant: 'destructive'
+      });
+      return;
+    }
 
-//     const handleReject = async () => {
-//         try {
-//             const rejectRes = await axios.patch('/api/project/update-status', { projectId, status: 'REJECTED' });
-//             if (rejectRes.status === 200) {
-//                 toast.success("Project rejected successfully.");
-//                 router.push('/projects');
-//             } else {
-//                 toast.error("Failed to reject the project.");
-//             }
-//         } catch (error: any) {
-//             console.error("Error rejecting project:", error.message || error);
-//             toast.error("An error occurred while rejecting the project.");
-//         }
-//     }
+    const payload = {
+      videoId: projectDetails?.video.id,
+      videoLink: videoLink,
+      thumbnails: thumbnails.filter(img => img.url !== ''),
+      title: title,
+      description: description,
+    };
+    console.log('Payload: ', payload);
 
-//     return (
-//         <div className="w-full p-10 flex flex-col gap-3">
-//             <Toaster />
-//             {/* Date header */}
-//             <div className=" text-xl font-semibold font-sans">
-//                 {projectDetails ? formatDate(projectDetails.createdAt) : "Loading date..."}
-//             </div>
+    try {
+      const { data } = await axios.patch('/api/project/update-video-details', {
+        videoId: payload.videoId,
+        details: {
+          title: payload.title,
+          description: payload.description,
+          videoLink: payload.videoLink,
+          thumbnails: payload.thumbnails
+        }
+      });
+      console.log("Updated data: ", data);
+      toast({
+        title: "Success",
+        description: "Project updated successfully.",
+      });
 
-//             {/* Whole container */}
-//             <div className="w-full flex items-start gap-4">
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "An unexpected error occurred.",
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
-//                 {/* Video part */}
-//                 <div className="w-4/5 p-2 pt-0 flex flex-col">
-//                     <div className="relative border border-slate-600 cursor-pointer rounded-lg min-h-[70vh] max-h-[70vh] flex items-center justify-center">
-//                         {projectDetails ? (
-//                             <video controls className="absolute max-h-[80vh] h-full">
-//                                 <source src={projectDetails.video.videoLink} type="video/mp4" />
-//                                 Your browser does not support the video tag.
-//                             </video>
-//                         ) : ("Loading video...")}
-//                     </div>
+  // Function to save the data updated by the creator in the db and upload the video on youtube 
+  const handleCreatorUpload = async () => {
+    const validThumbnails = thumbnails.filter((thumb) => thumb.url.trim() !== "");
+    let thumbnailURL = "";
+    if (validThumbnails.length > 0) {
+      if (selectedThumbnail === null || thumbnails[selectedThumbnail].url.trim() === "") {
+        setUploadError("Please select a thumbnail before uploading.");
+        return;
+      }
+      thumbnailURL = thumbnails[selectedThumbnail].url;
+    }
 
-//                     <div>
-//                         {projectDetails ? (
-//                             <input
-//                                 disabled={!isEditing}
-//                                 type="text"
-//                                 value={title}
-//                                 onChange={(e) => setTitle(e.target.value)}
-//                                 className={`h-14 text-xl font-medium w-full mt-2 rounded-md p-2 bg-transparent outline-none ${!isEditing ? 'cursor-not-allowed opacity-70' : 'cursor-text border border-slate-600'}`}
-//                                 placeholder="Enter title..."
-//                             />
-//                         ) : ("Loading title...")}
+    setUploadError("");
+    setIsUploading(true);
+    try {
+      // Update video details via PATCH call.
+      await axios.patch("/api/project/update-video-details", {
+        videoId: projectDetails?.video.id,
+        details: {
+          title,
+          description,
+          videoLink,
+          thumbnails: thumbnails.filter((t) => t.url.trim() !== "").map((t) => ({ id: t.id, url: t.url })),
+        },
+      });
 
-//                         {/* Description textarea with dynamic height */}
-//                         <div className="py-3 flex flex-col">
-//                             {projectDetails ? (
-//                                 <textarea
-//                                     disabled={!isEditing}
-//                                     ref={textAreaRef}
-//                                     value={description}
-//                                     onChange={(e) => {
-//                                         setDescription(e.target.value);
-//                                         adjustTextareaHeight();
-//                                     }}
-//                                     className={`w-full p-1 text-md tracking-tight leading-7 bg-neutral-700 rounded outline-none transition-all duration-300 resize-none overflow-hidden ${!isEditing ? 'cursor-not-allowed opacity-70' : 'cursor-text '}`}
-//                                     placeholder="Enter description..."
-//                                 />
-//                             ) : ("Loading description...")}
+      // Trigger YouTube upload via POST call.
+      // await axios.post("/api/youtube/upload", {
+      //   projectId,
+      //   videoLink,
+      //   title,
+      //   description,
+      //   thumbnail: thumbnailURL,
+      //   tags: [],
+      //   privacyStatus: "public",
+      // });
+      console.log("Upload process completed successfully.");
+    } catch (err: any) {
+      setUploadError(err.response?.data?.error || "Upload failed");
+      console.error(err);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
-//                             {/* Toggle icon in flow */}
-//                             <div
-//                                 className="mt-2 self-center cursor-pointer"
-//                                 onClick={() => setIsDescriptionExpanded(prev => !prev)}
-//                             >
-//                                 {isDescriptionExpanded ? <CircleArrowUp /> : <CircleArrowDown />}
-//                             </div>
-//                         </div>
-//                     </div>
-//                 </div>
+  if (!projectDetails) {
+    return <div className="flex items-center justify-center h-full w-full">Loading...</div>;
+  }
 
-//                 {/* Thumbnail part */}
-//                 {isCreator && (
-//                     <div className="border border-gray-600 bg-[#212121] rounded-lg w-1/5 p-2 flex flex-col gap-2 h-auto">
-//                         <h3 className="text-xl font-sans font-medium">Thumbnails</h3>
-//                         <ImageRadioGroup
-//                             images={videoThumbnails}
-//                             selectedThumbnailId={selectedThumbnailId}
-//                             onChange={(id) => id !== 0 && setSelectedThumbnailId(id)}
-//                         />
-//                     </div>
-//                 )}
+  return (
+    <div className="h-full flex-grow pl-32 pr-16 py-14 flex gap-20 items-center">
+      {/* Main section: Video and InputForm */}
+      <div className={`h-full w-2/3 flex flex-col ${isEditorReview ? 'gap-5' : 'gap-10'} items-end justify-center`}>
+        <VideoUploader
+          videoLink={videoLink}
+          onUploadComplete={(url: string) => setVideoLink(url)}
+          poster={selectedThumbnail !== null ? projectDetails.video.thumbnail[selectedThumbnail]?.url : undefined}
+          isUserAllowed={isEditorReview}
+          className="max-h-[50dvh] rounded-lg"
+        />
 
-//             </div>
+        {isEditorReview && <IssueMessage
+          issueTitle={issueTitle || 'Not specified'}
+          issueDescription={issueDescription}
+        />}
 
-//             {/* Buttons container */}
-//             {(projectDetails && !['ACCEPTED', 'REJECTED', 'REVIEW'].includes(projectDetails.status) && isCreator)
-//                 || (projectDetails && !['ACCEPTED', 'REJECTED'].includes(projectDetails.status) && !isCreator)
-//                 ? <div className="h-20 p-3 flex gap-5">
-//                     <Button variant="large" onClick={() => setIsEditing(bool => !bool)} className="bg-yellow-500 hover:bg-yellow-600" >Edit</Button>
-//                     <Button variant="large" disabled={isLoading} onClick={handleSave} className="bg-sky-500 hover:bg-sky-600"
-//                     >
-//                         {isLoading ? "saving.." : "Save"}
-//                     </Button>
-//                     {isCreator &&
-//                         <>
-//                             <Button variant="large" onClick={handleUpload} className="bg-emerald-500 hover:bg-emerald-600" >Upload</Button>
-//                             <Button variant="large" onClick={() => (setIsOpen(true))} className="bg-slate-50 hover:bg-slate-200 text-black" >Review</Button>
-//                             <Button variant="large" onClick={handleReject} className="hover:bg-red-600" >Decline</Button>
-//                         </>
-//                     }
-//                     {!isCreator && <Button variant="large">Submit</Button>}
+        <InputForm
+          title={title}
+          setTitle={setTitle}
+          description={description}
+          setDescription={setDescription}
+          disabled={formDisabled}
+        />
+      </div>
 
-//                     {isCreator && <Dropdown defaultName="Privacy Status" items={['unlisted', 'private', 'public']} selectedItem={privacyStatus} onChange={val => setPrivacyStatus(val)} />}
-//                 </div>
-//                 : null
-//             }
+      {/* Thumbnails and Action Buttons */}
+      <div className="h-full w-1/4 rounded-lg flex flex-col items-center gap-4">
+        <div className="border-2 max-h-fit w-full rounded-lg flex flex-col justify-start items-center gap-5 p-6 flex-grow">
+          <p className="text-xl font-medium text-left leading-5 w-full">
+            Upload thumbnails
+          </p>
+          {thumbnails.map((thumb, index) => (
+            <ImageUploadBox
+              key={thumb.id}
+              imageLink={thumb.url}
+              setImageLink={(newLink) => updateThumbnail(index, newLink)}
+              selected={selectedThumbnail === index && thumb.url.trim() !== ""}
+              onSelect={() => {
+                if (thumb.url.trim() !== "") {
+                  setSelectedThumbnail(index);
+                }
+              }}
+              isThumbnailDisabled={isThumbnailDisabled}
+            />
+          ))}
+        </div>
 
-//             <ReviewMessage projectId={projectId} isOpen={isOpen} onClose={() => setIsOpen(false)} />
-//         </div>
-//     );
-// }
+        {/* Action buttons */}
+        <div className="w-full pt-2 flex items-center justify-around gap-6">
+          {(isCreatorPending || isEditorReview) && <Button
+            size="sm"
+            className="flex-grow h-11 px-0 to-white font-medium text-lg bg-emerald-400 hover:bg-emerald-500"
+            onClick={isEditorReview ? handleEditorUpload : handleCreatorUpload}
+            disabled={isUploading && !isCreatorPending && !isEditorReview}
+          >
+            {isUploading ? <Loader2 className="animate-spin" /> : (isEditorReview ? "Update" : "Upload")}
+          </Button>}
+
+          {isCreatorPending && <Button
+            size="sm"
+            className="flex-grow h-11 font-medium text-lg"
+          >
+            Review
+          </Button>}
+
+          {(isCreatorPending || isEditorReview) && <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleDiscard}
+            className="flex-grow h-11 font-medium text-lg hover:bg-rose-500/80"
+          >
+            Discard
+          </Button>}
+        </div>
+        {uploadError && <p className="text-red-500 text-sm mt-2">{uploadError}</p>}
+      </div>
+    </div>
+  );
+}
