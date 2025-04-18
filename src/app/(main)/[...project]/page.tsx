@@ -10,6 +10,17 @@ import { Loader2, } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/hooks/use-toast";
 import IssueMessage from "@/components/alerts/issueMessage";
+import CreateReviewAlert from "@/components/alerts/createReviewAlert";
+import { useRouter } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { YTUploadDataType } from "@/app/api/youtube/upload/route";
+
 
 interface Thumbnail {
   id: number;
@@ -28,8 +39,8 @@ interface VideoDetails {
 }
 
 interface ReviewType {
-  issueTitle: string;
-  issueDescription: string;
+  title: string;
+  description: string;
 }
 
 interface ProjectDetails {
@@ -55,11 +66,14 @@ export default function ProjectPage({ params }: { params: Promise<{ project: str
   const [issueTitle, setIssueTitle] = useState<string>('');
   const [issueDescription, setIssueDescription] = useState<string>('');
   const [selectedThumbnail, setSelectedThumbnail] = useState<number | null>(null);
+  const [privacyStatus, setPrivacyStatus] = useState<"public" | "private" | "unlisted">("public");
+  const [madeForKids, setMadeForKids] = useState<boolean>(false);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [status, setStatus] = useState<ProjectDetails["status"]>('PENDING');
 
   const { toast } = useToast();
+  const router = useRouter();
 
   const session = useSession();
   const user = session.data?.user;
@@ -80,8 +94,8 @@ export default function ProjectPage({ params }: { params: Promise<{ project: str
         setStatus(details.status)
         setTitle(details.video.title);
         setDescription(details.video.description || "");
-        setIssueTitle(details.reviews.issueTitle);
-        setIssueDescription(details.reviews.issueDescription);
+        setIssueTitle(details.reviews?.title);
+        setIssueDescription(details.reviews?.description);
         setVideoLink(details.video.videoLink);
         const fetchedThumbs = details.video.thumbnail.map((t) => ({ id: t.id, url: t.url }));
         const paddedThumbs = Array.from({ length: 4 }, (_, index) => ({
@@ -96,6 +110,9 @@ export default function ProjectPage({ params }: { params: Promise<{ project: str
         console.error("Error fetching project details", error);
       });
   }, [projectId]);
+
+  console.log(projectDetails);
+
 
   // If new thumbnail is uploaded then update them in the local state
   const updateThumbnail = (index: number, newUrl: string) => {
@@ -114,13 +131,14 @@ export default function ProjectPage({ params }: { params: Promise<{ project: str
   const handleDiscard = async () => {
     try {
       const discardedProject = await axios.patch('/api/project/update-status', { projectId, status: "REJECTED" });
-      if(discardedProject.statusText === "OK") {
+      if (discardedProject.statusText === "OK") {
         toast({
           title: "Discarded",
           description: "Project workspace is now blocked."
         });
       }
-    } catch(error: any) {
+      router.refresh();
+    } catch (error: any) {
       console.error(error || 'An unexpected error occurred.');
       toast({
         title: "Unknown error",
@@ -175,7 +193,7 @@ export default function ProjectPage({ params }: { params: Promise<{ project: str
         title: "Success",
         description: "Project updated successfully.",
       });
-
+      router.push('/home');
     } catch (error: any) {
       console.error("Upload error:", error);
       toast({
@@ -214,16 +232,29 @@ export default function ProjectPage({ params }: { params: Promise<{ project: str
         },
       });
 
+      const YTUploadData: YTUploadDataType = {
+        projectId,
+        videoLink,
+        title,
+        description,
+        thumbnail: thumbnailURL,
+        tags: [],
+        privacyStatus,
+        madeForKids
+      }
+
+      console.log("YTUploadData: ", YTUploadData)
+
       // Trigger YouTube upload via POST call.
-      // await axios.post("/api/youtube/upload", {
-      //   projectId,
-      //   videoLink,
-      //   title,
-      //   description,
-      //   thumbnail: thumbnailURL,
-      //   tags: [],
-      //   privacyStatus: "public",
-      // });
+      const YTUploadResult = await axios.post("/api/youtube/upload", { ...YTUploadData });
+      if (YTUploadResult.statusText === 'OK') {
+        toast({
+          title: 'Video uploaded on youtube...',
+          duration: 3000
+        })
+        router.push('/home');
+      }
+
       console.log("Upload process completed successfully.");
     } catch (err: any) {
       setUploadError(err.response?.data?.error || "Upload failed");
@@ -264,8 +295,8 @@ export default function ProjectPage({ params }: { params: Promise<{ project: str
       </div>
 
       {/* Thumbnails and Action Buttons */}
-      <div className="h-full w-1/4 rounded-lg flex flex-col items-center gap-4">
-        <div className="border-2 max-h-fit w-full rounded-lg flex flex-col justify-start items-center gap-5 p-6 flex-grow">
+      <div className="h-full w-1/4 rounded-lg flex flex-col items-center justify-between gap-4">
+        <div className="border-2 max-h-fit w-full rounded-lg flex flex-col justify-start items-center gap-5 px-6 py-5 flex-grow">
           <p className="text-xl font-medium text-left leading-5 w-full">
             Upload thumbnails
           </p>
@@ -285,8 +316,33 @@ export default function ProjectPage({ params }: { params: Promise<{ project: str
           ))}
         </div>
 
+        {isCreatorPending && <div className="h-8 w-full flex gap-5">
+          {/* Privacy status selector */}
+          <Select onValueChange={(value: "public" | "private" | "unlisted") => setPrivacyStatus(value)}>
+            <SelectTrigger className="w-[45%] h-full">
+              <SelectValue placeholder="Privacy Status" />
+            </SelectTrigger>
+            <SelectContent side="top">
+              <SelectItem value="public">Public</SelectItem>
+              <SelectItem value="private">Private</SelectItem>
+              <SelectItem value="unlisted">Unlisted</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Made for kids? */}
+          <Select onValueChange={(value: string) => setMadeForKids(value === "true")}>
+            <SelectTrigger className="w-[180px] h-full">
+              <SelectValue placeholder="Made for Kids?" />
+            </SelectTrigger>
+            <SelectContent side="top">
+              <SelectItem value="true" >Yes, Made for Kids</SelectItem>
+              <SelectItem value="false" >Not Made for Kids</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        }
         {/* Action buttons */}
-        <div className="w-full pt-2 flex items-center justify-around gap-6">
+        <div className="w-full flex items-center justify-around gap-4">
           {(isCreatorPending || isEditorReview) && <Button
             size="sm"
             className="flex-grow h-11 px-0 to-white font-medium text-lg bg-emerald-400 hover:bg-emerald-500"
@@ -296,18 +352,16 @@ export default function ProjectPage({ params }: { params: Promise<{ project: str
             {isUploading ? <Loader2 className="animate-spin" /> : (isEditorReview ? "Update" : "Upload")}
           </Button>}
 
-          {isCreatorPending && <Button
-            size="sm"
-            className="flex-grow h-11 font-medium text-lg"
-          >
-            Review
-          </Button>}
+          {isCreatorPending &&
+            <CreateReviewAlert
+              projectId={projectId}
+            />}
 
           {(isCreatorPending || isEditorReview) && <Button
             size="sm"
             variant="secondary"
             onClick={handleDiscard}
-            className="flex-grow h-11 font-medium text-lg hover:bg-rose-500/80"
+            className="flex-grow h-11 p-0 font-medium text-lg hover:bg-rose-500/80"
           >
             Discard
           </Button>}
