@@ -5,7 +5,7 @@ import { OAuth2Client } from "google-auth-library";
 import { getUser } from "@/lib/utils/get-user";
 import { updateProjectStatus } from "@/lib/utils/project";
 
-interface YTUploadDataType {
+export interface YTUploadDataType {
   projectId: number;
   videoLink: string;
   title: string;
@@ -13,13 +13,14 @@ interface YTUploadDataType {
   thumbnail?: string;
   tags?: string[];
   privacyStatus?: "public" | "private" | "unlisted";
+  madeForKids: boolean;
 }
 
 
 //  This function is responsible for uploading a video on youtube 
 export async function POST(req: NextRequest) {
   try {
-    const { projectId, videoLink, title, description, thumbnail, tags, privacyStatus = 'public' }: YTUploadDataType = await req.json();
+    const { projectId, videoLink, title, description, thumbnail, tags, privacyStatus = 'public', madeForKids = false }: YTUploadDataType = await req.json();
     if (!videoLink || !title) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
@@ -63,7 +64,8 @@ export async function POST(req: NextRequest) {
           categoryId: "22",
         },
         status: {
-          privacyStatus: `${privacyStatus}`,
+          privacyStatus,
+          selfDeclaredMadeForKids: madeForKids
         },
       },
       media: {
