@@ -17,11 +17,9 @@ export default function InputForm({
   setDescription,
   disabled
 }: InputFormProps) {
-  // Local state for immediate UI updates.
   const [localTitle, setLocalTitle] = useState(title);
   const [localDescription, setLocalDescription] = useState(description || '');
 
-  // Create debounced versions of the parent update functions.
   const debouncedSetTitle = useDebouncer(setTitle, 500);
   const debouncedSetDescription = setDescription ? useDebouncer(setDescription, 500) : null;
 
