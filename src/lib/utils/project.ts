@@ -99,6 +99,9 @@ export async function updateVideoDetails(videoId: number, details: { title: stri
                     status: "PENDING"
                 }
             })
+            await prisma.review.delete({
+                where: { projectId: projectStatus.id }
+            })
             return { updatedVideo, projectStatus };
 
         });
