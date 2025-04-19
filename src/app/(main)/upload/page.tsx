@@ -101,7 +101,7 @@ export default function UploadPage() {
       <div className="h-full w-2/3 flex flex-col gap-10 justify-between">
         <VideoUploader
           videoLink={formState.videoUrl}
-          isUserAllowed={true}
+          isUserAllowed={user?.role === "EDITOR"}
           onUploadComplete={(url: string) =>
             setFormState(prev => ({ ...prev, videoUrl: url }))
           }
