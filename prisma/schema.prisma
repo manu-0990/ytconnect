@@ -14,15 +14,10 @@ model User {
   email         String    @unique
   role          Role?
   emailVerified DateTime?
-
-  accounts Account[]
-  sessions Session[]
-
-  editor  Editor?
-  creator Creator?
-
-  createdReferrals  Referral[] @relation("CreatorReferrals")
-  receivedReferrals Referral[] @relation("EditorReferrals")
+  accounts      Account[]
+  sessions      Session[]
+  editor        Editor?
+  creator       Creator?
 }
 
 model Account {
@@ -62,33 +57,34 @@ model Session {
 }
 
 model Editor {
-  id        Int      @id
-  user      User     @relation(fields: [id], references: [id])
-  creatorId Int?
-  creator   Creator? @relation(fields: [creatorId], references: [id])
-
-  videos   Video[]
-  projects Project[]
+  id           Int         @id
+  user         User        @relation(fields: [id], references: [id])
+  creatorId    Int?
+  creator      Creator?    @relation(fields: [creatorId], references: [id])
+  invitationId Int?        @unique
+  invitation   Invitation? @relation(fields: [invitationId], references: [id])
+  videos       Video[]
+  projects     Project[]
 }
 
 model Creator {
-  id   Int  @id
-  user User @relation(fields: [id], references: [id])
-
-  editors  Editor[]
-  projects Project[]
+  id         Int          @id
+  user       User         @relation(fields: [id], references: [id])
+  editors    Editor[]
+  projects   Project[]
+  invitation Invitation[]
 }
 
-model Referral {
-  id        Int       @id @default(autoincrement())
-  code      String    @unique
-  creatorId Int
-  editorId  Int?      @unique // Unique constraint: one editor per referral record
-  usedAt    DateTime?
-  expiresAt DateTime?
-
-  creator User  @relation("CreatorReferrals", fields: [creatorId], references: [id])
-  editor  User? @relation("EditorReferrals", fields: [editorId], references: [id])
+model Invitation {
+  id          Int       @id @default(autoincrement())
+  email       String
+  creatorId   Int
+  status      Status    @default(PENDING)
+  sentAt      DateTime  @default(now())
+  respondedAt DateTime?
+  editorId    Int?      @unique
+  editor      Editor?
+  creator     Creator   @relation(fields: [creatorId], references: [id])
 }
 
 model Video {
@@ -97,11 +93,10 @@ model Video {
   title       String
   description String?
   videoLink   String
-
-  editorId  Int
-  projectId Int
-  editor    Editor   @relation(fields: [editorId], references: [id])
-  Project   Project?
+  editorId    Int
+  projectId   Int
+  editor      Editor      @relation(fields: [editorId], references: [id])
+  Project     Project?
 }
 
 model Thumbnail {
@@ -118,14 +113,13 @@ model Project {
   status    Status   @default(PENDING)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   editorId  Int
   creatorId Int
-  videoId   Int     @unique
+  videoId   Int      @unique
   reviews   Review?
-  editor    Editor  @relation(fields: [editorId], references: [id])
-  creator   Creator @relation(fields: [creatorId], references: [id])
-  video     Video   @relation(fields: [videoId], references: [id])
+  editor    Editor   @relation(fields: [editorId], references: [id])
+  creator   Creator  @relation(fields: [creatorId], references: [id])
+  video     Video    @relation(fields: [videoId], references: [id])
 }
 
 model Review {
@@ -148,4 +142,9 @@ enum Status {
   REVIEW
   ACCEPTED
   REJECTED
+}
+
+enum RequestType {
+  INVITE
+  REQUEST
 }
