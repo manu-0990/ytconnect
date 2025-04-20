@@ -61,10 +61,9 @@ model Editor {
   user         User        @relation(fields: [id], references: [id])
   creatorId    Int?
   creator      Creator?    @relation(fields: [creatorId], references: [id])
-  invitationId Int?        @unique
-  invitation   Invitation? @relation(fields: [invitationId], references: [id])
   videos       Video[]
   projects     Project[]
+  invitations Invitation[] @relation(name: "InvitationForEditor")
 }
 
 model Creator {
@@ -76,15 +75,16 @@ model Creator {
 }
 
 model Invitation {
-  id          Int       @id @default(autoincrement())
-  email       String
+id          Int          @id @default(autoincrement())
+  email       String?
+  creator     Creator      @relation(fields: [creatorId], references: [id])
   creatorId   Int
-  status      Status    @default(PENDING)
-  sentAt      DateTime  @default(now())
+  type        RequestType  @default(INVITE)
+  status      Status       @default(PENDING)
+  sentAt      DateTime     @default(now())
   respondedAt DateTime?
-  editorId    Int?      @unique
-  editor      Editor?
-  creator     Creator   @relation(fields: [creatorId], references: [id])
+  editor      Editor?      @relation(name: "InvitationForEditor", fields: [editorId], references: [id])
+  editorId    Int?
 }
 
 model Video {
