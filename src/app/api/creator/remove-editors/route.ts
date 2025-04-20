@@ -1,12 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/utils/get-user";
 import prisma from "@/db";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const user = await getUser();
 
-    // Ensure the user is a creator.
     if (user.role !== "CREATOR") {
       return NextResponse.json(
         { error: "Only creators can remove editors." },
@@ -14,8 +13,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Parse the editorId from the request body.
-    const { editorId } = await request.json();
+    const body = await request.json();
+    const editorId = Number(body.editorId);
+    if (isNaN(editorId) || editorId <= 0) {
+      return NextResponse.json(
+        { error: "Editor ID is required and must be a number." },
+        { status: 400 }
+      );
+    }
+
     if (!editorId) {
       return NextResponse.json(
         { error: "Editor ID is required." },
@@ -23,7 +29,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check that the specified editor is connected to the creator.
     const editorRecord = await prisma.editor.findUnique({
       where: { id: editorId },
     });
@@ -34,22 +39,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Remove the connection by setting creatorId to null in the editor table.
     await prisma.editor.update({
       where: { id: editorId },
       data: { creatorId: null },
     });
 
-    //  update the referral record to indicate the connection is removed.
-    await prisma.referral.deleteMany({
-      where: {
-        editorId: editorRecord.id,
-        creatorId: user.id,
-      },
-    });
-
-
     return NextResponse.json({
+      status: 200,
       message: "Editor connection removed successfully.",
     });
   } catch (error: any) {
