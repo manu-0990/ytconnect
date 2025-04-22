@@ -57,12 +57,12 @@ model Session {
 }
 
 model Editor {
-  id           Int         @id
-  user         User        @relation(fields: [id], references: [id])
-  creatorId    Int?
-  creator      Creator?    @relation(fields: [creatorId], references: [id])
-  videos       Video[]
-  projects     Project[]
+  id          Int          @id
+  user        User         @relation(fields: [id], references: [id])
+  creatorId   Int?
+  creator     Creator?     @relation(fields: [creatorId], references: [id])
+  videos      Video[]
+  projects    Project[]
   invitations Invitation[] @relation(name: "InvitationForEditor")
 }
 
@@ -75,16 +75,16 @@ model Creator {
 }
 
 model Invitation {
-id          Int          @id @default(autoincrement())
-  email       String?
-  creator     Creator      @relation(fields: [creatorId], references: [id])
+  id          Int         @id @default(autoincrement())
+  email       String
+  creator     Creator     @relation(fields: [creatorId], references: [id])
   creatorId   Int
-  type        RequestType  @default(INVITE)
-  status      Status       @default(PENDING)
-  sentAt      DateTime     @default(now())
+  type        RequestType @default(INVITE)
+  status      Status      @default(PENDING)
+  sentAt      DateTime    @default(now())
   respondedAt DateTime?
-  editor      Editor?      @relation(name: "InvitationForEditor", fields: [editorId], references: [id])
-  editorId    Int?
+  editor      Editor     @relation(name: "InvitationForEditor", fields: [editorId], references: [id])
+  editorId    Int
 }
 
 model Video {
