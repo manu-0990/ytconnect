@@ -1,7 +1,6 @@
 import prisma from "@/db";
 import { getUser } from "@/lib/utils/get-user";
 import { NextRequest, NextResponse } from "next/server";
-import { Status, RequestType } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
   const user = await getUser();
@@ -44,12 +43,31 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const existing = await prisma.invitation.findFirst({
+      where: {
+        editorId: me.id,
+        creatorId: target.creator.id,
+        type: "REQUEST"
+      }
+    });
+
+    if (existing) {
+      const invitation = await prisma.invitation.update({
+        where: { id: existing.id },
+        data: { sentAt: new Date(), status: "PENDING" }
+      });
+
+      return NextResponse.json({ message: "Request updated", invitation }, { status: 200 })
+    }
+
     const invitation = await prisma.invitation.create({
       data: {
-        type: RequestType.REQUEST,
-        status: Status.PENDING,
-        editor:  { connect: { id: me.id } },
-        creator: { connect: { id: target.creator.id } },
+        email: email,
+        type: "REQUEST",
+        status: "PENDING",
+        editor: { connect: { id: me.id } },
+        creator: { connect: { id: target.id } },
       },
     });
     return NextResponse.json(
@@ -70,18 +88,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const invitation = await prisma.invitation.create({
-      data: {
-        type: RequestType.INVITE,
-        status: Status.PENDING,
-        creator: { connect: { id: me.id } },
-        editor:  { connect: { id: target.editor.id } },
+    const existing = await prisma.invitation.findFirst({
+      where: {
+        editorId: target.creator?.id,
+        creatorId: me.id,
+        type: "INVITE",
       },
     });
-    return NextResponse.json(
-      { message: "Invitation sent.", invitation },
-      { status: 200 }
-    );
+
+    if (existing) {
+      const invitation = await prisma.invitation.update({
+        where: { id: existing.id },
+        data: { sentAt: new Date(), status: "PENDING" },
+      });
+      return NextResponse.json({ message: "Request updated.", invitation }, { status: 200 });
+    }
+
+    const invitation = await prisma.invitation.create({
+      data: {
+        email: email,
+        type: "INVITE",
+        status: "PENDING",
+        creator: { connect: { id: me.id } },
+        editor: { connect: { id: target.editor.id } },
+      },
+    });
+    return NextResponse.json({ message: "Invitation sent.", invitation }, { status: 200 });
   }
 
   return NextResponse.json(

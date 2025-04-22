@@ -27,10 +27,17 @@ export async function GET(request: NextRequest) {
   if (!userData) {
     return NextResponse.json(
       { error: "User not found." },
-      { status: 404 }
+      { status: 403 }
     );
   };
-  
+  const me = await getUser();
+  if (userData.role === me.role) {
+    return NextResponse.json(
+      { error: `Cannot connect to another ${me.role?.toLowerCase()}.` },
+      { status: 404 }
+    );
+  }
+
   return NextResponse.json({
     status: 200,
     username: userData?.name

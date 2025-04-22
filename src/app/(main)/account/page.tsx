@@ -24,12 +24,15 @@ export default function Account() {
   const session = useSession();
   const user = session.data?.user;
 
+
   useEffect(() => {
     async function getEditor() {
       const editors: Editors[] = await axios.get("/api/creator/my-editors").then(res => res.data.editors);
       setEditors(editors);
     }
-    getEditor();
+    if(user?.role === "CREATOR") {
+      getEditor();
+    } 
   }, []);
 
   const removeHandler = async (editorId: number) => {
@@ -52,11 +55,11 @@ export default function Account() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <span className="text-5xl font-bold">Team</span>
-          <InviteEditor />
+          <InviteEditor userType={user?.role!} />
         </div>
 
         <div className="flex-grow h-full w-full flex flex-col gap-5">
-          {editors ? (editors.map((editor, index) => (
+          {editors && (editors.map((editor, index) => (
             <AccountCard
               key={index}
               name={`${editor.user.name}`}
@@ -65,8 +68,8 @@ export default function Account() {
               id={editor.user.id}
               onRemove={() => removeHandler(editor.user.id)}
             />
-          ))) :
-            <div>No editors connected</div>}
+          )))}
+          {editors?.length === 0 && <div>No editors connected</div>}
         </div>
       </div>
     </div>
