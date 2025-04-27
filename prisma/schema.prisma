@@ -8,16 +8,18 @@ datasource db {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  name          String?
-  image         String?
-  email         String    @unique
-  role          Role?
-  emailVerified DateTime?
-  accounts      Account[]
-  sessions      Session[]
-  editor        Editor?
-  creator       Creator?
+  id                    Int            @id @default(autoincrement())
+  name                  String?
+  image                 String?
+  email                 String         @unique
+  role                  Role?
+  emailVerified         DateTime?
+  accounts              Account[]
+  sessions              Session[]
+  editor                Editor?
+  creator               Creator?
+  recievedNotifications Notification[] @relation("ReceivedNotifications")
+  sentNotification      Notification[] @relation("SentNotifications")
 }
 
 model Account {
@@ -34,8 +36,7 @@ model Account {
   scope                    String?
   id_token                 String?
   session_state            String?
-
-  user User @relation(fields: [userId], references: [id])
+  user                     User    @relation(fields: [userId], references: [id])
 
   @@unique([provider, providerAccountId])
 }
@@ -57,34 +58,19 @@ model Session {
 }
 
 model Editor {
-  id          Int          @id
-  user        User         @relation(fields: [id], references: [id])
-  creatorId   Int?
-  creator     Creator?     @relation(fields: [creatorId], references: [id])
-  videos      Video[]
-  projects    Project[]
-  invitations Invitation[] @relation(name: "InvitationForEditor")
+  id        Int       @id
+  user      User      @relation(fields: [id], references: [id])
+  creatorId Int?
+  creator   Creator?  @relation(fields: [creatorId], references: [id])
+  videos    Video[]
+  projects  Project[]
 }
 
 model Creator {
-  id         Int          @id
-  user       User         @relation(fields: [id], references: [id])
-  editors    Editor[]
-  projects   Project[]
-  invitation Invitation[]
-}
-
-model Invitation {
-  id          Int         @id @default(autoincrement())
-  email       String
-  creator     Creator     @relation(fields: [creatorId], references: [id])
-  creatorId   Int
-  type        RequestType @default(INVITE)
-  status      Status      @default(PENDING)
-  sentAt      DateTime    @default(now())
-  respondedAt DateTime?
-  editor      Editor     @relation(name: "InvitationForEditor", fields: [editorId], references: [id])
-  editorId    Int
+  id       Int       @id
+  user     User      @relation(fields: [id], references: [id])
+  editors  Editor[]
+  projects Project[]
 }
 
 model Video {
@@ -109,17 +95,18 @@ model Thumbnail {
 }
 
 model Project {
-  id        Int      @id @default(autoincrement())
-  status    Status   @default(PENDING)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  editorId  Int
-  creatorId Int
-  videoId   Int      @unique
-  reviews   Review?
-  editor    Editor   @relation(fields: [editorId], references: [id])
-  creator   Creator  @relation(fields: [creatorId], references: [id])
-  video     Video    @relation(fields: [videoId], references: [id])
+  id            Int            @id @default(autoincrement())
+  status        Status         @default(PENDING)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  editorId      Int
+  creatorId     Int
+  videoId       Int            @unique
+  reviews       Review?
+  editor        Editor         @relation(fields: [editorId], references: [id])
+  creator       Creator        @relation(fields: [creatorId], references: [id])
+  video         Video          @relation(fields: [videoId], references: [id])
+  notifications Notification[]
 }
 
 model Review {
@@ -130,6 +117,23 @@ model Review {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Notification {
+  id          Int              @id @default(autoincrement())
+  recipientId Int
+  recipient   User             @relation("ReceivedNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+  senderId    Int?
+  sender      User?            @relation("SentNotifications", fields: [senderId], references: [id], onDelete: SetNull)
+  type        NotificationType
+  message     String
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  projectId   Int?
+  project     Project?         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId])
+  @@index([recipientId, read])
 }
 
 enum Role {
@@ -147,4 +151,24 @@ enum Status {
 enum RequestType {
   INVITE
   REQUEST
+}
+
+enum NotificationType {
+  EDITOR_INVITE
+  EDITOR_JOIN_REQUEST
+  JOIN_ACCEPTED
+  JOIN_REJECTED
+  EDITOR_REMOVED
+
+  PROJECT_ASSIGNED
+  PROJECT_STATUS_UPDATE
+  NEW_REVIEW
+  PROJECT_COMMENT
+
+  NEW_MESSAGE
+
+  VIDEO_UPLOADED
+  VIDEO_READY
+
+  SYSTEM_ALERT
 }
