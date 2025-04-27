@@ -15,16 +15,13 @@ import { Input } from "../ui/input";
 import { useState } from "react";
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
+import { Role } from "@prisma/client";
 
-interface Invitation {
-  email: string;
-  onInvite: () => void;
-}
-
-export default function InviteEditor() {
+export default function Request({ userType }: { userType: Role }) {
   const [open, setOpen] = useState<boolean>(false);
-  const [email, setEmail] = useState<string>('');
-  const [resUser, setResUser] = useState<string>('');
+  const [email, setEmail] = useState<string>("");
+  const [resUser, setResUser] = useState<string>("");
+  const [error, setError] = useState<string>("");
 
   const { toast } = useToast();
 
@@ -44,19 +41,15 @@ export default function InviteEditor() {
         })
         return;
       }
-      const response = await axios.get("/api/user/find", { params: { email } });
-      if (response.status === 200) {
-        setResUser(response.data.username)
-      } else {
-        setResUser(response.data.message)
-      }
 
+      const response = await axios.get(`/api/user/find?email=${email.toLowerCase()}`);
+      if (response.status === 200) {
+        setResUser(response.data.username);
+      } else {
+        setResUser("");
+      }
     } catch (error: any) {
-      toast({
-        title: `${error.message || "An unknown error occurred."}`,
-        variant: "destructive",
-        duration: 3000,
-      })
+      setError(error.response.data.error);
     }
   }
 
@@ -71,15 +64,26 @@ export default function InviteEditor() {
         })
         return;
       }
-      const inviteResponse = await axios.post("src/app/api/user/invite/route.ts", { params: { email } })
-      if (inviteResponse.status === 200) {
+      const inviteResponse = await axios.post(`/api/user/request?email=${email}`);
+      if (inviteResponse.status === 201) {
         toast({
           title: "Request sent.",
           duration: 3000,
         })
       }
+      setResUser('');
+      setEmail('');
     } catch (error: any) {
-
+      toast({
+        title: `${error.response?.data?.error || error.message || "An unknown error occurred."}`,
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setOpen(false);
+      setEmail("");
+      setError("");
+      setResUser("");
     }
   }
 
@@ -103,14 +107,15 @@ export default function InviteEditor() {
               className="focus-visible:ring-0 focus-visible:outline-none"
             />
           </AlertDialogTitle>
-          {resUser && <AlertDialogDescription>{`User: ${resUser}`}</AlertDialogDescription>}
+          <AlertDialogDescription className={`${error ? "text-red-500" : "text-muted-foreground"}`}>{resUser ? (`User: ${resUser}`) : (error)}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel
             onClick={() => {
               setOpen(false);
-              setEmail('');
-              setResUser('');
+              setEmail("");
+              setResUser("");
+              setError("");
             }}
           >
             Cancel
@@ -118,7 +123,7 @@ export default function InviteEditor() {
           <AlertDialogAction
             onClick={resUser ? inviteUser : searchUser}
           >
-            {resUser ? "Invite" : "Search"}
+            {resUser ? (userType === "CREATOR" ? "Invite" : "Request") : "Search"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
