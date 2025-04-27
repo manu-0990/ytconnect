@@ -26,6 +26,8 @@ export default function Request({ userType }: { userType: Role }) {
   const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError("");
+    setResUser("");
     const newValue = e.target.value;
     setEmail(newValue);
   };
@@ -123,7 +125,7 @@ export default function Request({ userType }: { userType: Role }) {
           <AlertDialogAction
             onClick={resUser ? inviteUser : searchUser}
           >
-            {resUser ? (userType === "CREATOR" ? "Invite" : "Request") : "Search"}
+            {resUser ? (userType === "CREATOR" ? "Invite" : "Join") : "Search"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
