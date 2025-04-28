@@ -1,9 +1,8 @@
+export default function NotificationsPage() {
 
-const Notification = () => {
-
-    return (
-        <div>Notification page in under construction...</div>
-    )
+  return (
+    <div className="min-h-screen w-full flex flex-col items-center justify-center">
+      This page is about to be removed
+    </div>
+  );
 }
-
-export default Notification;
