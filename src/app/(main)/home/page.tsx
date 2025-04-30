@@ -1,7 +1,7 @@
-import CreatorPage from '@/components/pages/CreatorPage';
-import EditorHomePage from '@/components/pages/EditorHomePage';
+import HomePage from '@/components/pages/HomePage';
 import RoleSelectPage from '@/components/pages/RoleSelectPage';
 import { authOptions } from '@/lib/auth';
+import { Role } from '@prisma/client';
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
 
@@ -13,9 +13,7 @@ export default async function Home() {
   }
   if(!session.user.role) {
     return <RoleSelectPage userName={`${session.user.name?.split(' ')[0]}`} />
-  } else if (session.user?.role === "CREATOR") {
-    return <CreatorPage />
-  } else if (session.user?.role === "EDITOR") {
-    return <EditorHomePage user={session.user}/>
+  }else {
+    return <HomePage role={session.user.role as Role} />
   }
 }

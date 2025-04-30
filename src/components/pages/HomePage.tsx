@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import VideoCard from "../ui/videoCard";
-import { User } from "next-auth";
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Notifications from "./Notifications";
+import { Role } from "@prisma/client";
 
 interface ProjectData {
   projectId: number;
@@ -22,11 +23,7 @@ interface AllProjectData {
   projects: any[];
 }
 
-interface EditorPageProps {
-  user: User;
-}
-
-export default function EditorHomePage({ user }: EditorPageProps) {
+export default function HomePage({ role }: { role: Role }) {
   const [activeTab, setActiveTab] = useState("all");
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,8 +75,12 @@ export default function EditorHomePage({ user }: EditorPageProps) {
         <TabsTrigger value="accepted">Accepted</TabsTrigger>
         <TabsTrigger value="rejected">Rejected</TabsTrigger>
         <TabsTrigger value="review">Review</TabsTrigger>
-
-        <Button className="ml-auto" variant='default' onClick={() => router.push('/upload')}><Plus/>Create New</Button>
+        
+        <div className="ml-auto flex gap-10" >
+          <Notifications />
+          {role === Role.EDITOR && <Button variant='default' onClick={() => router.push('/upload')}><Plus/>Create New</Button>}
+          {role === Role.CREATOR && <Button variant='default' onClick={() => router.push('/upload')}><Plus/>Add Editor</Button>}
+        </div>
       </TabsList>
 
       <TabsContent
