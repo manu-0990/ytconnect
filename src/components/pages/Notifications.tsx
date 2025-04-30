@@ -8,8 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import axios, { AxiosError } from "axios";
-import { Bell, Loader2} from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { Bell, Loader2 } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import NotificationItem from "../NotificationItem";
 import { useToast } from "@/hooks/use-toast";
 import { Notification } from "@/components/NotificationItem";
@@ -19,12 +19,14 @@ export default function Notifications() {
   const [isLoading, setIsLoading] = useState(true);
   const [respondingId, setRespondingId] = useState<number | null>(null);
   const { toast } = useToast();
+  const hasMarkedRead = useRef(false);
 
-  const fetchNotifications = useCallback(async () => {
-    if (!respondingId) setIsLoading(true);
+  const fetchNotifications = useCallback(async (showLoading = true) => {
+    if (!respondingId && showLoading) setIsLoading(true);
     try {
       const response = await axios.get<{ data: Notification[] }>("/api/notifications");
-      setNotifications(response.data.data || [])
+      setNotifications(response.data.data || []);
+      hasMarkedRead.current = false;
     } catch (error: any) {
       console.error("Failed to fetch notifications:", error.response?.data?.error || error.message);
       toast({
@@ -32,15 +34,16 @@ export default function Notifications() {
         variant: "destructive"
       });
     } finally {
-      if (!respondingId) setIsLoading(false);
+      if (!respondingId && showLoading) setIsLoading(false);
     }
-  }, [respondingId]);
+  }, [respondingId, toast]);
 
   useEffect(() => {
     fetchNotifications();
-    // Optional: Implement polling or real-time updates (e.g., WebSockets)
-    // const interval = setInterval(fetchNotifications, 30000); // Poll every 30 seconds
-    // return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      fetchNotifications(false);
+    }, 60000); //  <------ Polling of 1 min
+    return () => clearInterval(interval);
   }, [fetchNotifications]);
 
   const handleRespond = useCallback(async (notificationId: number, action: 'accept' | 'decline') => {
@@ -53,14 +56,9 @@ export default function Notifications() {
         notificationId,
         action,
       });
-
       toast({ description: response.data.message || `${action === 'accept' ? 'Accepted' : 'Declined'} successfully!` });
-
       setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-
-      // Optional: Re-fetch all notifications to ensure consistency,
-      // especially if accepting/declining creates new notifications (like JOIN_ACCEPTED/REJECTED)
-      // await fetchNotifications(); // Uncomment if needed, but might cause a flicker
+      await fetchNotifications(false);
 
     } catch (error: any) {
       const axiosError = error as AxiosError<{ error?: string }>;
@@ -70,24 +68,65 @@ export default function Notifications() {
         description: errorMessage,
         variant: "destructive"
       });
+      await fetchNotifications(false);
     } finally {
       setRespondingId(null);
     }
-  }, [respondingId]);
+  }, [respondingId, toast, fetchNotifications]);
+
+  const markNotificationsAsRead = useCallback(async (idsToMark: number[]) => {
+    if (idsToMark.length === 0) return;
+
+    const originalNotifications = [...notifications];
+    setNotifications((prev) =>
+      prev.map((n) =>
+        idsToMark.includes(n.id) ? { ...n, read: true } : n
+      )
+    );
+    hasMarkedRead.current = true;
+
+    try {
+      await axios.post('/api/notifications/mark-as-read', { notificationIds: idsToMark });
+      await fetchNotifications(false);
+    } catch (error) {
+      console.error("Failed to mark notifications as read:", error);
+      setNotifications(originalNotifications);
+      hasMarkedRead.current = false;
+      toast({
+        title: "Error",
+        description: "Could not update notification status.",
+        variant: "destructive",
+      });
+    }
+  }, [notifications]);
+
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  const handleDropdownOpenChange = (open: boolean) => {
+    if (open && unreadCount > 0 && !hasMarkedRead.current) {
+      const unreadIds = notifications
+        .filter(n => !n.read)
+        .map(n => n.id);
+      markNotificationsAsRead(unreadIds);
+    }
+    if (!open) {
+      hasMarkedRead.current = false;
+    }
+  };
+
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger className="relative">
-          
-          <Bell size={23} className="w-full h-full" />
+      <DropdownMenu onOpenChange={handleDropdownOpenChange}>
+        <DropdownMenuTrigger className="relative" aria-label="Open Notifications">
+          <Bell size={25} className="w-full h-full" />
           {unreadCount > 0 && (
-            <span className="absolute top-3 right-1.5 items-center justify-center h-1.5 w-1.5 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full transform translate-x-1/2 -translate-y-1/2"></span>
+            <span className="absolute top-0 right-0 flex items-center justify-center h-4 w-4 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full transform translate-x-1/2 -translate-y-1/2">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
           )}
-
         </DropdownMenuTrigger>
+        
         <DropdownMenuContent className="w-[300px] sm:w-[350px] md:w-[400px] max-h-[70vh] overflow-y-auto">
           <DropdownMenuLabel className="text-lg font-semibold">Notifications</DropdownMenuLabel>
           <DropdownMenuSeparator />

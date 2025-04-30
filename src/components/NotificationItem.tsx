@@ -43,8 +43,7 @@ export default function NotificationItem({ notification, onRespond, isResponding
     onRespond(id, 'decline');
   };
 
-  // Fallback for sender image/name if sender is null (e.g., system alerts)
-  const senderImage = sender?.image ?? '/ytconnect-default.png';
+  const senderImage = sender?.image || undefined;
   const senderName = sender?.name ?? 'User';
 
   return (
@@ -54,7 +53,7 @@ export default function NotificationItem({ notification, onRespond, isResponding
       onSelect={(e) => e.preventDefault()}
     >
       <img
-        src={senderImage}
+        src={senderImage }
         alt={senderName}
         className="h-9 w-9 rounded-full flex-shrink-0"
         onError={(e) => (e.currentTarget.src = '/default-avatar.png')}
