@@ -32,7 +32,7 @@ export async function GET() {
       if (!me.creatorId) {
         return NextResponse.json(
           { error: "No creator connected to this editor." },
-          { status: 404 }
+          { status: 200 }
         );
       }
       const creator = await prisma.creator.findUnique({

@@ -43,16 +43,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create an invitation for the editor
-    const invitation = await prisma.invitation.create({
-      data: {
-        email,
-        creatorId: user.id,
-      },
-    });
 
     return NextResponse.json(
-      { message: "Editor invitation sent successfully.", invitation },
+      { message: "Editor invitation sent successfully." },
       { status: 200 }
     );
   } catch (error) {
