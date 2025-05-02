@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
+import { Role } from "@prisma/client";
 import { UserCircle2 } from "lucide-react";
+import ConfirmDisconnect from "../alerts/ConfirmDisconnect";
 
 interface AccountCardProps {
   name: string;
   email: string;
   avatarUrl?: string;
   id: number;
+  role: Role,
   onRemove: (editorId: number) => void;
 }
 
@@ -14,6 +17,7 @@ export default function AccountCard({
   email,
   avatarUrl,
   id,
+  role,
   onRemove,
 }: AccountCardProps) {
 
@@ -39,13 +43,7 @@ export default function AccountCard({
         </div>
       </div>
 
-      <Button
-        onClick={() => onRemove(id)}
-        className="bg-red-600 px-5 py-2 rounded-full font-semibold transition hover:bg-red-700"
-        variant="destructive"
-      >
-        Remove
-      </Button>
+      <ConfirmDisconnect role={role} onRemove={onRemove} id={id} />
     </div>
   );
 }

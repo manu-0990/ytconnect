@@ -96,7 +96,7 @@ export default function Request({ userType }: { userType: Role }) {
           className={`bg-white hover:bg-white/85 text-black rounded-full h-10 py-4 px-8 text-xl font-semibold tracking-tight`}
           onClick={() => setOpen(true)}
         >
-          Add New
+          {userType === Role.CREATOR ? "Add New" : "Join a Creator"}
         </span>
       </AlertDialogTrigger>
       <AlertDialogContent>
@@ -122,7 +122,7 @@ export default function Request({ userType }: { userType: Role }) {
           >
             Cancel
           </AlertDialogCancel>
-          <AlertDialogAction
+          <AlertDialogAction 
             onClick={resUser ? inviteUser : searchUser}
           >
             {resUser ? (userType === "CREATOR" ? "Invite" : "Join") : "Search"}
