@@ -79,7 +79,7 @@ export default function HomePage({ role }: { role: Role }) {
         <div className="ml-auto flex gap-10" >
           <Notifications />
           {role === Role.EDITOR && <Button variant='default' onClick={() => router.push('/upload')}><Plus/>Create New</Button>}
-          {role === Role.CREATOR && <Button variant='default' onClick={() => router.push('/upload')}><Plus/>Add Editor</Button>}
+          {role === Role.CREATOR && <Button variant='default' onClick={() => router.push('/account')}><Plus/>Add Editor</Button>}
         </div>
       </TabsList>
 
