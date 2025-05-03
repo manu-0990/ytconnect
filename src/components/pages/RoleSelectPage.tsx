@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import RoleSelectModal from "@/components/modals/RoleSelectModal";
 import { useToast } from "@/hooks/use-toast";
+import RoleSelectAlert from "../alerts/RoleSelectAlert";
 
 export default function RoleSelectPage({ userName }: { userName: string }) {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
@@ -46,7 +46,7 @@ export default function RoleSelectPage({ userName }: { userName: string }) {
   };
 
   return (
-      <RoleSelectModal
+      <RoleSelectAlert
         isOpen={isModalOpen}
         userName={userName}
         onRoleSelect={handleRoleSelection}
