@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { Input } from './ui/input';
 import useDebouncer from '@/hooks/useDebouncer';

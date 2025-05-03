@@ -26,11 +26,6 @@ const items = [
     icon: CloudUpload,
   },
   {
-    title: "Notifications",
-    url: "/notifications",
-    icon: Bell,
-  },
-  {
     title: "Settings",
     url: "/settings",
     icon: Settings,
