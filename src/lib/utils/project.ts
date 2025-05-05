@@ -1,5 +1,5 @@
 import prisma from "@/db";
-import { NotificationType, Role } from "@prisma/client";
+import { NotificationType, Role, Status } from "@prisma/client";
 
 export interface CreateProjectInput {
     thumbnails?: { id: number; imageLink: string }[];
@@ -131,16 +131,46 @@ export async function updateProjectStatus(projectId: number, status: 'ACCEPTED' 
     }
 }
 
-export async function updateVideoDetails(videoId: number, details: { title: string, description: string, videoLink: string, thumbnails?: { id: number, url: string }[] }) {
+export async function updateVideoDetails(senderId: number, videoId: number, details: { title: string, description: string, videoLink: string, thumbnails?: { id: number, url: string }[] }) {
     try {
-        const updatedProject = await prisma.$transaction(async () => {
-            const updatedVideo = await prisma.video.update({
+        const result = await prisma.$transaction(async (tx) => {
+            const videoWithProject = await tx.video.findUnique({
+                where: { id: videoId },
+                include: {
+                    Project: {
+                        select: {
+                            id: true,
+                            creatorId: true,
+                            editorId: true,
+                        }
+                    }
+                }
+            });
+
+            if (!videoWithProject) {
+                throw new Error(`Video with ID ${videoId} not found.`);
+            }
+            if (!videoWithProject.Project) {
+                throw new Error(`Project associated with video ID ${videoId} not found.`);
+            }
+
+            const projectInfo = videoWithProject.Project;
+            const isActorCreator = senderId === projectInfo.creatorId;
+            const isActorEditor = senderId === projectInfo.editorId;
+
+            if (!isActorCreator && !isActorEditor) {
+                throw new Error(`User ${senderId} is not authorized to update details for video ${videoId} (not project creator or editor).`);
+            }
+
+            const recipientId = isActorCreator ? projectInfo.editorId : projectInfo.creatorId;
+
+            const updatedVideo = await tx.video.update({
                 where: { id: videoId },
                 data: {
                     title: details.title,
                     description: details.description,
                     videoLink: details.videoLink,
-                    ...(details.thumbnails && {
+                    ...(details.thumbnails !== undefined && {
                         thumbnail: {
                             deleteMany: {},
                             create: details.thumbnails.map(thumbnail => ({
@@ -149,32 +179,43 @@ export async function updateVideoDetails(videoId: number, details: { title: stri
                             })),
                         },
                     }),
+                    ...(details.thumbnails === undefined && {
+                        thumbnail: undefined
+                    })
                 },
+                select: { id: true, title: true, description: true, videoLink: true, editorId: true, projectId: true }
             });
 
-            const projectStatus = await prisma.project.update({
-                where: { videoId: videoId },
+            const updatedProject = await tx.project.update({
+                where: { id: projectInfo.id },
                 data: {
-                    status: "PENDING"
-                }
-            })
-            const existingReview = await prisma.review.findUnique({
-                where: { projectId: projectStatus.id }
+                    status: Status.PENDING
+                },
+                select: { id: true, status: true, creatorId: true, editorId: true }
             });
 
-            if (existingReview) {
-                await prisma.review.delete({
-                    where: { projectId: projectStatus.id }
-                });
-            }
-            return { updatedVideo, projectStatus };
+            await tx.review.deleteMany({
+                where: { projectId: projectInfo.id }
+            });
 
+            await tx.notification.create({
+                data: {
+                    type: NotificationType.PROJECT_DETAILS_UPDATE,
+                    message: `Details for video "${updatedVideo.title}" were updated. Project status set to PENDING.`,
+                    recipientId: recipientId,
+                    senderId: senderId,
+                    projectId: projectInfo.id
+                }
+            });
+
+            return { updatedVideo, updatedProject };
         });
 
-        return updatedProject;
+        return result;
+
     } catch (error: any) {
-        console.error("Error updating video details:", error);
-        throw new Error("Failed to update video details.");
+        console.error(`Error updating video details for videoId ${videoId}:`, error);
+        throw new Error(`Failed to update video details. Reason: ${error.message}`);
     }
 }
 

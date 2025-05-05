@@ -1,7 +1,9 @@
+import { getUser } from "@/lib/utils/get-user";
 import { updateVideoDetails } from "@/lib/utils/project";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(req: NextRequest) {
+    const user = await getUser();
     try {
         const { videoId, details } = await req.json();
 
@@ -12,7 +14,7 @@ export async function PATCH(req: NextRequest) {
             );
         }
 
-        const updatedVideo = await updateVideoDetails(videoId, details);
+        const updatedVideo = await updateVideoDetails(user.id, videoId, details);
 
         return NextResponse.json({
             message: "Status updated successfully.",
