@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/utils/get-user";
 import prisma from "@/db";
+import { NotificationType } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,20 +30,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const editorRecord = await prisma.editor.findUnique({
-      where: { id: editorId },
-    });
-    if (!editorRecord || editorRecord.creatorId !== user.id) {
-      return NextResponse.json(
-        { error: "Editor not found or not connected to you." },
-        { status: 400 }
-      );
-    }
+    await prisma.$transaction(async (tx) => {
+      const editorRecord = await tx.editor.findUnique({
+        where: { id: editorId },
+      });
+      if (!editorRecord || editorRecord.creatorId !== user.id) {
+        return NextResponse.json(
+          { error: "Editor not found or not connected to you." },
+          { status: 400 }
+        );
+      }
 
-    await prisma.editor.update({
-      where: { id: editorId },
-      data: { creatorId: null },
-    });
+      await tx.editor.update({
+        where: { id: editorId },
+        data: { creatorId: null },
+      });
+      
+      await tx.notification.create({
+        data: {
+          type: NotificationType.EDITOR_REMOVED,
+          message: `${user.name} removed you from their team.`,
+          senderId: user.id,
+          recipientId: editorId,
+        }
+      });
+    })
 
     return NextResponse.json({
       status: 200,

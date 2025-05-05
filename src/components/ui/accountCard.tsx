@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Role } from "@prisma/client";
 import { UserCircle2 } from "lucide-react";
 import ConfirmDisconnect from "../alerts/ConfirmDisconnect";
