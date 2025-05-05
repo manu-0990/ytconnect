@@ -1,16 +1,20 @@
+import { getUser } from "@/lib/utils/get-user";
 import { createReviewWithProjectId, updateProjectStatus } from "@/lib/utils/project";
+import { Role } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 interface Body {
     projectId: number;
     status: 'PENDING' | 'REJECTED' | 'REVIEW';
     reviewData: {
-        title:string;
+        title: string;
         description: string;
     }
 }
 
 export async function PATCH(req: NextRequest) {
+    const user = await getUser();
+
     try {
         const { projectId, status, reviewData }: Body = await req.json();
 
@@ -25,11 +29,12 @@ export async function PATCH(req: NextRequest) {
                 { message: "Status must be `ACCEPTED`, `REJECTED` OR `REVIEW`." },
                 { status: 400 }
             );
-        }
+        };
 
         const updatedProject = status !== 'REVIEW' ?
-            await updateProjectStatus(projectId, status) :
-            await createReviewWithProjectId(projectId, { title: reviewData.title, description: reviewData.description });
+            await updateProjectStatus(projectId, status, user.id, user.role as Role) :
+            await createReviewWithProjectId(projectId, user.id, { title: reviewData.title, description: reviewData.description });
+
 
         return NextResponse.json({
             message: "Status updated successfully.",

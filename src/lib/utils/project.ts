@@ -1,5 +1,5 @@
 import prisma from "@/db";
-import { NotificationType } from "@prisma/client";
+import { NotificationType, Role } from "@prisma/client";
 
 export interface CreateProjectInput {
     thumbnails?: { id: number; imageLink: string }[];
@@ -69,13 +69,61 @@ export async function createProjectWithVideo({ input, senderId, sender, recipien
     return result;
 }
 
-export async function updateProjectStatus(projectId: number, status: 'ACCEPTED' | 'REJECTED' | 'PENDING') {
-
+export async function updateProjectStatus(projectId: number, status: 'ACCEPTED' | 'REJECTED' | 'PENDING', senderId: number, role: Role) {
     try {
-        const updatedProject = await prisma.project.update({
-            where: { id: projectId },
-            data: { status }
+        const updatedProject = await prisma.$transaction(async (tx) => {
+
+            const project = await tx.project.findUnique({
+                where: { id: projectId },
+                select: {
+                    creatorId: true,
+                    editorId: true,
+                    video: {
+                        select: { title: true }
+                    }
+                }
+            });
+
+            if (!project) {
+                throw new Error(`Project with ID ${projectId} not found.`);
+            }
+
+            let recipientId: number;
+            if (senderId === project.creatorId) {
+                recipientId = project.editorId;
+                const senderUser = await tx.user.findUnique({ where: { id: senderId }, select: { role: true } });
+                if (senderUser?.role !== Role.CREATOR) {
+                    throw new Error(`Sender ${senderId} is the project creator but does not have CREATOR role.`);
+                }
+            } else if (senderId === project.editorId) {
+                recipientId = project.creatorId;
+                const senderUser = await tx.user.findUnique({ where: { id: senderId }, select: { role: true } });
+                if (senderUser?.role !== Role.EDITOR) {
+                    throw new Error(`Sender ${senderId} is the project editor but does not have EDITOR role.`);
+                }
+            } else {
+                throw new Error(`Sender ${senderId} is not authorized to update status for project ${projectId}.`);
+            }
+
+            const updatedProjectResult = await tx.project.update({
+                where: { id: projectId },
+                data: { status: status }
+            });
+
+            const projectTitle = project.video?.title ?? `Project ${projectId}`;
+            await tx.notification.create({
+                data: {
+                    type: NotificationType.PROJECT_STATUS_UPDATE,
+                    message: `Status of project "${projectTitle}" was updated to ${status}.`,
+                    senderId: senderId,
+                    recipientId: recipientId,
+                    projectId: projectId
+                }
+            });
+
+            return updatedProjectResult;
         });
+
         return updatedProject;
     } catch (error: any) {
         console.error("Error updating project status:", error);
@@ -190,7 +238,7 @@ export async function getProjectDetails(projectID: number) {
     return projectDetails;
 }
 
-export async function createReviewWithProjectId(projectId: number, reviewData: { title: string; description?: string; }) {
+export async function createReviewWithProjectId(projectId: number, senderId: number, reviewData: { title: string; description?: string; }) {
     try {
         const projectExists = await prisma.project.findUnique({
             where: { id: projectId },
@@ -198,10 +246,10 @@ export async function createReviewWithProjectId(projectId: number, reviewData: {
 
         if (!projectExists) {
             throw new Error(`Project with ID ${projectId} does not exist.`);
-        }
+        };
 
-        const result = await prisma.$transaction(async (prisma) => {
-            const review = await prisma.review.create({
+        const result = await prisma.$transaction(async (tx) => {
+            const review = await tx.review.create({
                 data: {
                     projectId,
                     title: reviewData.title,
@@ -209,10 +257,19 @@ export async function createReviewWithProjectId(projectId: number, reviewData: {
                 }
             });
 
-            const project = await prisma.project.update({
+            const project = await tx.project.update({
                 where: { id: projectId },
                 data: { status: 'REVIEW' }
-            })
+            });
+
+            await tx.notification.create({
+                data: {
+                    type: NotificationType.NEW_REVIEW,
+                    message: `A new issue is created by the creator.`,
+                    senderId,
+                    recipientId: await tx.editor.findFirst({ where: { creatorId: senderId } }).then(res => res?.id as number),
+                }
+            });
 
             return { review, project };
         })

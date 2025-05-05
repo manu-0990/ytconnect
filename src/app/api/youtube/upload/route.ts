@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       let retries = 3;
       while (retries > 0) {
       try {
-        await updateProjectStatus(projectId, "ACCEPTED");
+        await updateProjectStatus(projectId, "ACCEPTED", user.id, user.role);
         break;
       } catch (err: any) {
         retries--;
