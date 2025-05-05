@@ -69,7 +69,7 @@ export async function createProjectWithVideo({ input, senderId, sender, recipien
     return result;
 }
 
-export async function updateProjectStatus(projectId: number, status: 'ACCEPTED' | 'REJECTED' | 'PENDING', senderId: number, role: Role) {
+export async function updateProjectStatus(projectId: number, status: 'ACCEPTED' | 'REJECTED' | 'PENDING', senderId: number) {
     try {
         const updatedProject = await prisma.$transaction(async (tx) => {
 

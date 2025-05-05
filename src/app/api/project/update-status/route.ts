@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest) {
         };
 
         const updatedProject = status !== 'REVIEW' ?
-            await updateProjectStatus(projectId, status, user.id, user.role as Role) :
+            await updateProjectStatus(projectId, status, user.id) :
             await createReviewWithProjectId(projectId, user.id, { title: reviewData.title, description: reviewData.description });
 
 
