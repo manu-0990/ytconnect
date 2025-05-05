@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
             status: 'PENDING'
         };
 
-        const { project, video } = await createProjectWithVideo(input);
+        const { project, video } = await createProjectWithVideo({ input, senderId: user.id, sender: user.name || "unknown user", recipientId: editorRecord.creatorId });
 
         return NextResponse.json({
             message: "Project creation successful.",

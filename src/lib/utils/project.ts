@@ -1,4 +1,5 @@
 import prisma from "@/db";
+import { NotificationType } from "@prisma/client";
 
 export interface CreateProjectInput {
     thumbnails?: { id: number; imageLink: string }[];
@@ -10,7 +11,7 @@ export interface CreateProjectInput {
     status?: "PENDING" | "REVIEW" | "ACCEPTED" | "REJECTED";
 }
 
-export async function createProjectWithVideo(input: CreateProjectInput) {
+export async function createProjectWithVideo({ input, senderId, sender, recipientId }: { input: CreateProjectInput, senderId: number, sender: string, recipientId: number }) {
     const { thumbnails, title, description, videoLink, editorId, creatorId } = input;
 
     const result = await prisma.$transaction(async (prisma) => {
@@ -27,7 +28,7 @@ export async function createProjectWithVideo(input: CreateProjectInput) {
         });
 
         //Create thumbnail records with videoId
-        const thumbnail = thumbnails && await Promise.all(
+        thumbnails && await Promise.all(
             thumbnails.map(obj => prisma.thumbnail.create({
                 data: {
                     id: obj.id,
@@ -51,6 +52,16 @@ export async function createProjectWithVideo(input: CreateProjectInput) {
             where: { id: video.id },
             data: { projectId: project.id },
         });
+
+        // Register a new notification for the project
+        await prisma.notification.create({
+            data: {
+                type: NotificationType.PROJECT_CREATED,
+                message: `New project created by ${sender}`,
+                recipientId,
+                senderId
+            }
+        })
 
         return { project, video: updatedVideo };
     });
