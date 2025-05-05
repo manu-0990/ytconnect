@@ -2,10 +2,12 @@
 
 import Request from "@/components/alerts/Request";
 import AccountCard from "@/components/ui/accountCard";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Role } from "@prisma/client";
 import axios, { AxiosError } from "axios";
-import { useSession } from "next-auth/react";
+import { LogOut } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 interface User {
@@ -105,8 +107,15 @@ export default function Account() {
   return (
     <div className="w-full h-full flex flex-col gap-6 items-center justify-center p-7">
 
-      <div className="w-2/5">
+      <div className="w-2/5 flex justify-between items-center">
         <span className="text-3xl font-bold capitalize">{`Hi, ${user?.name?.toLowerCase() || 'User'}`}</span>
+        <Button
+          size="lg"
+          variant="default"
+          onClick={() => signOut({ callbackUrl: "/" })}
+        >
+          <LogOut /> Sign out 
+        </Button>
       </div>
 
       <div className="border w-2/5 p-10 rounded-lg flex flex-col justify-between gap-16">
